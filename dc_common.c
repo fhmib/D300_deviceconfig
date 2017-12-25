@@ -173,19 +173,18 @@ int dc_msg_send(int qid, void* msg, int len)
 
     mmsg_t* p = (mmsg_t*)msg;
 
-    EPT(stderr, "\nI'm in %s,%d\n", __func__, __LINE__); 
     if(qid < 0 || len < 0 || len > MAX_MSG_BUF + (int)sizeof(MADR)){
         rval = 1;
         EPT(stderr, "\n%s:ERROR in %s:qid = %d, mtype = %ld, len = %d\n\n", qinfs[re_qin].pname, __func__, qid, p->mtype, len);
         goto func_exit;
     }
     pthread_mutex_lock(&txm_lock);
-    EPT(stderr, "\nI'm ready for sending msg\n"); 
     rcnt = msgsnd(qid, msg, len, 0);
     if(-1 == rcnt){
         EPT(stderr, "%s:error occurs in sending msg to qid = %d, len = %d, cause[%s]\n", qinfs[re_qin].pname, qid, len, strerror(errno));
         rval = 2;
     }
+    EPT(stderr, "\n%s:sending message success, len = %d\n", __func__, rcnt); 
     pthread_mutex_unlock(&txm_lock);
 
 func_exit:

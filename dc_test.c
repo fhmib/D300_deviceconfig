@@ -28,7 +28,7 @@ int main()
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);
     test_dc_data = (dcmsg_t*)test_rcv_data.data;
     msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, 0, 0);
-    printf("data:\n%s\n", test_dc_data->data);
+    printf("%s:data:\n%s\n", __FILE__, test_dc_data->data);
     return 0;
 
 }

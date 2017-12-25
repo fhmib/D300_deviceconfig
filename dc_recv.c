@@ -28,7 +28,6 @@ void dc_snd2boa()
 {
     int len = 0;
     mmsg_t snd_msg;
-    char* data = NULL;
     dcmsg_t* dcmsg;
     int rval = 0;
 
@@ -38,7 +37,6 @@ void dc_snd2boa()
     dcmsg = (dcmsg_t*)snd_msg.data;
     dcmsg->type = DC_SND_BOA_DATA; 
     len += sizeof(long);
-    EPT(stderr, "\nI'm in %s,%d", __func__, __LINE__);
 
     pthread_mutex_lock(&dc_share.mutex);
     //need more code to update device_info;
@@ -46,24 +44,17 @@ void dc_snd2boa()
     
     //for test
     write_data_for_test();
-    EPT(stderr, "\nI'm in %s,%d", __func__, __LINE__);
 
-    rval = add_data(data, SND_MSG_LEN);             //put data_msg to data;
-    EPT(stderr, "\nI'm in %s,%d", __func__, __LINE__);
-    strcpy(dcmsg->data, data);
-    len += sizeof(dcmsg->data);
+    rval = add_data(dcmsg->data, SND_MSG_LEN);             //put data_msg to data;
+    EPT(stderr, "\nI'm in %s,%d, data content:", __func__, __LINE__);
+    EPT(stderr, "\n%s\n", dcmsg->data);
+    len += strlen(dcmsg->data);
     pthread_mutex_unlock(&dc_share.mutex);
-    EPT(stderr, "\nI'm in %s,%d", __func__, __LINE__);
 
     //send message to boa
-    EPT(stderr, "\nI'm in %s,%d, len = %d\n", __func__, __LINE__, len); 
     dc_msg_to_boa(&snd_msg, len);
-    EPT(stderr, "\nI'm in %s,%d\n", __func__, __LINE__); 
     
     read_first = 1;
-
-    free(data);
-    data = NULL;
     return;
 }
 
@@ -78,7 +69,7 @@ void dc_snd2boa()
  *      1:          buf filled
  *      2:          buf length out of para-length
  */
-int add_data(void* arg, int length)
+int add_data(char* arg, int length)
 {
     int i, len, fstval;
     char* buf;
@@ -121,7 +112,7 @@ int add_data(void* arg, int length)
         rval = 2;
         goto func_exit;
     }
-    arg = buf;
+    strcpy(arg, buf);
 func_exit:
     return rval;
 }

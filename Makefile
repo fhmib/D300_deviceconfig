@@ -14,4 +14,4 @@ dc_recv.o: dc_common.h dc_recv.c
 	$(CC) -c dc_recv.c
 
 clean:
-	rm -f $(OBJECTS) devcfg
+	rm -f *.o *~ devcfg

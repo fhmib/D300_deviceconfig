@@ -124,9 +124,55 @@ void* dc_qrv_thread(void* arg)
 thread_return:
     pthread_mutex_lock(&dc_share.mutex);
     dc_share.qr_run = 0;
+    pthread_cond_signal(&dc_share.cond);
     pthread_mutex_unlock(&dc_share.mutex);
+
     sleep(1);
     pthread_exit((void*)&rval);
+}
+
+/*
+ * function:
+ *      according to type of msg to choose opposite function
+ * patameters:
+ *      len:                msg length
+ *      data:               msg body
+ * return:
+ *      0:                  success
+ *      other:              failure
+ */
+int dc_rmsg_proc(int len, void* data)
+{
+    int rval = 0;
+    mmsg_t* rmsg;
+
+    rmsg = (mmsg_t*)data;
+
+    if(len <= (int)sizeof(MADR)){
+        EPT(stderr, "%s:reveive a message with wrong length:%d\n", __func__, len);
+        rval = 1;
+        goto func_exit;
+    }
+    if(rmsg->node < 0 &&  rmsg->node > MAX_NODE_CNT-1){
+        EPT(stderr, "%s:receive a message with wrong node index:%d\n", __func__, rmsg->node);
+        rval = 2;
+        goto func_exit;
+    }
+
+    switch(rmsg->mtype)
+    {
+        case MMSG_DC_BOAREAD:
+            dc_snd2boa();
+            break;
+        case MMSG_DC_BOAWRITE:
+            break;
+        default:
+            EPT(stderr, "%s:receive unknown msg type, no = %ld\n", __func__, rmsg->mtype);
+            break;
+    }
+
+func_exit:
+    return rval;
 }
 
 /*
@@ -236,10 +282,65 @@ void dc_msg_malloc()
             memset(data_msg[i].pvalue, 0, len);
         }
         else{
-            //something new you forget to added in this func, use default len = 64
+            //something new that be forgeted to added in this func will use default len = 64
             len = 64;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
     }
 }
+
+/*
+ * function:
+ *      free the memory of data_msg
+ */
+void dc_mem_free()
+{
+    int i;
+    
+    for(i = 0; i < data_cnt; i++)
+    {
+        free(data_msg[i].pvalue);
+    }
+    return;
+}
+/*
+ * function:
+ *      according the message from boa to config the machine
+ * parameters:
+ *      arg:                dcviceconfig internal queue id
+ */
+void* dc_cfg_thread(void* arg)
+{
+    int qid;
+    int rval = 0;
+
+    qid = *(int*)arg;
+    pthread_detach(pthread_self());
+    EPT(stderr, "%s:I'm in dc_cfg_thread\n", qinfs[re_qin].pname);
+
+    while(1)
+    {
+        sleep(1);
+    }
+    goto thread_return;
+
+thread_return:
+    pthread_mutex_lock(&dc_share.mutex);
+    dc_share.cfg_run = 0;
+    pthread_cond_signal(&dc_share.cond);
+    pthread_mutex_unlock(&dc_share.mutex);
+
+    sleep(1);
+    pthread_exit((void*)&rval);
+}
+
+int dc_msg_to_boa(mmsg_t* snd_msg, U16 length)
+{
+    if(dc_msg_send(boa_qid, snd_msg, length) > 0){
+        EPT(stderr, "%s:send to boa wrong\n", __func__);
+        return 1;
+    }
+    return 0;
+}
+

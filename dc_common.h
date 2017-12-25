@@ -18,7 +18,11 @@
 #define EPT                 fprintf
 #define ASSERT              assert
 
-#define MADR                unsigned char
+#define U8                  unsigned char
+#define U16                 unsigned short
+#define U32                 unsigned int
+
+#define MADR                U8
 #define PATH_CREAT_KEY      "/etc/profile"          /*path name for creatint all queue, can be modified*/
 #define PNAME_DEVCFG        "devcfg"
 #define PNAME_BOA           "boa"
@@ -147,10 +151,10 @@ int     dc_init(void);
 void*   dc_qrv_thread(void*);
 void*   dc_cfg_thread(void*);
 int     dc_rmsg_proc(int, void*);
-void    dc_info_init(void);
+//void    dc_info_init(void);
 void    dc_msg_malloc(void);
 void    dc_mem_free(void);
-int     dc_msg_to_boa(mmsg_t*, int);
+int     dc_msg_to_boa(mmsg_t*, U16);
 
 void    dc_snd2boa(void);
 int     add_data(void*, int);

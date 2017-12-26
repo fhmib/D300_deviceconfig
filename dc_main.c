@@ -162,7 +162,7 @@ int dc_rmsg_proc(int len, void* data)
     switch(rmsg->mtype)
     {
         case MMSG_DC_BOAREAD:
-            dc_snd2boa();
+            dc_read_2boa(rmsg->data, len-sizeof(MADR));
             break;
         case MMSG_DC_BOAWRITE:
             break;

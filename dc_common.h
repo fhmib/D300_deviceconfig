@@ -34,7 +34,7 @@
 #define QUEUE_MODE          (QUEUE_R |QUEUE_W |QUEUE_W>>3 |QUEUE_W>>6)
 #define MAX_NODE_CNT        32
 #define MAX_MSG_BUF         8192
-#define SND_MSG_LEN         MAX_MSG_BUF-sizeof(long)
+//#define SND_MSG_LEN         MAX_MSG_BUF-sizeof(long)
 
 #define DNAME_NDID          "NodeId"
 #define DNAME_NDNAME        "NodeName"
@@ -58,13 +58,13 @@ typedef enum _GB_MSG_TYPE
     MMSG_DC_SNDBOA,
     MMSG_DC_REQ
 }GB_MSG;
-
+/*
 typedef enum _DC_MSG_TYPE
 {
     DC_SND_BOA_DATA = 1,
     DC_SND_BOA_REQ
 }DC_MSG;
-
+*/
 typedef struct _qinfo_t
 {
     char    pname[64];
@@ -98,13 +98,13 @@ typedef struct _mmsg_t
     char    data[MAX_MSG_BUF];
 }mmsg_t;
 #define MMSG_LEN        sizeof(mmsg_t)
-
+/*
 typedef struct _dcmsg_t
 {
     long    type;
     char    data[SND_MSG_LEN];
 }dcmsg_t;
-
+*/
 //a table stores all device parameters
 //no use
 typedef struct _device_info_t
@@ -156,7 +156,7 @@ void    dc_msg_malloc(void);
 void    dc_mem_free(void);
 int     dc_msg_to_boa(mmsg_t*, U16);
 
-void    dc_snd2boa(void);
+int    dc_read_2boa(void*, int);
 int     add_data(char*, int);
 void    dc_config(int, void*);
 //for test

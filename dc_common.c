@@ -184,7 +184,7 @@ int dc_msg_send(int qid, void* msg, int len)
         EPT(stderr, "%s:error occurs in sending msg to qid = %d, len = %d, cause[%s]\n", qinfs[re_qin].pname, qid, len, strerror(errno));
         rval = 2;
     }
-    EPT(stderr, "\n%s:sending message success, len = %d\n", __func__, rcnt); 
+    EPT(stderr, "\n%s:sending message success, len = %d\n", __func__, len); 
     pthread_mutex_unlock(&txm_lock);
 
 func_exit:

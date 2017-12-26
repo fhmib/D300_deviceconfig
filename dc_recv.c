@@ -24,38 +24,77 @@ trans_data data_msg[] =
 };
 const int data_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
 
-void dc_snd2boa()
+int dc_read_2boa(void* arg, int lenth)
 {
     int len = 0;
     mmsg_t snd_msg;
-    dcmsg_t* dcmsg;
     int rval = 0;
+    char name[64];
+    char* buf;
+    char ch;
+    int i, pos1, pos2;
+
+    if(lenth <= 0){
+        EPT(stderr, "%s:receive msg with wrong format\n",__func__);
+        rval = 1;
+        goto func_exit;
+    }
+    buf = (char*)arg;
 
     snd_msg.mtype = MMSG_DC_SNDBOA;
     snd_msg.node = sa;
     len += sizeof(MADR);
-    dcmsg = (dcmsg_t*)snd_msg.data;
-    dcmsg->type = DC_SND_BOA_DATA; 
     len += sizeof(long);
 
     pthread_mutex_lock(&dc_share.mutex);
-    //need more code to update device_info;
+
+    for(pos1 = 0; pos1 < lenth; pos1++)
+    {
+        memset(name, 0, sizeof(name));
+        ch = *(buf+pos1);
+        if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+            for(pos2 = 1;;pos2++)
+            {
+                ch = *(buf+pos1+pos2);
+                if(ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+                    continue;
+                }
+                else
+                    break;
+            }
+            strncpy(name, buf+pos1, pos2);
+            EPT(stderr, "%s:name:%s\n", __func__, name);
+            for(i = 0; i < data_cnt; i++)
+            {
+                if(0 == strcmp(data_msg[i].name, name)){
+                    data_msg[i].enable = 1;
+                }
+            }
+            pos1 += (pos2 - 1);
+        }
+    }
+
+    //update device_info;
     //rval = update_data_msg();
     
     //for test
     write_data_for_test();
 
-    rval = add_data(dcmsg->data, SND_MSG_LEN);             //put data_msg to data;
+    //put data to snd_msg.data
+    rval = add_data(snd_msg.data, MAX_MSG_BUF);
     EPT(stderr, "\nI'm in %s,%d, data content:", __func__, __LINE__);
-    EPT(stderr, "\n%s\n", dcmsg->data);
-    len += strlen(dcmsg->data);
+    EPT(stderr, "\n%s\n", snd_msg.data);
+    len += strlen(snd_msg.data);
+
     pthread_mutex_unlock(&dc_share.mutex);
 
     //send message to boa
     dc_msg_to_boa(&snd_msg, len);
     
     read_first = 1;
-    return;
+
+func_exit:
+    return rval;
 }
 
 /*
@@ -102,6 +141,7 @@ int add_data(char* arg, int length)
         data_msg[i].enable = 0;
 
         if(len > 8192){
+        EPT(stderr, "%s:buf filled! len = %d\n", __func__, len);
             rval = 1;
             goto func_exit;
         }
@@ -119,11 +159,13 @@ func_exit:
 
 void write_data_for_test()
 {
+    /*
     int i;
     for(i = 0; i < data_cnt; i++)
     {
         data_msg[i].enable = 1;
     }
+    */
     strcpy(data_msg[0].pvalue, "3");
     strcpy(data_msg[1].pvalue, "RZXT_NODE[3]");
     strcpy(data_msg[2].pvalue, "2155.5");

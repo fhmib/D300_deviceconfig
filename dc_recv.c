@@ -8,8 +8,9 @@ extern int cfg_data_cnt;
 extern dc_tshare_t dc_share;
 extern trans_data data_msg[];
 extern int data_cnt;
+extern int data_len;
 extern int read_first;
-extern dc_cfg* data_cfg;
+extern dc_cfg data_cfg[];
 
 /*
 int read_first;             //the variable must be set 1 before config.
@@ -147,7 +148,7 @@ int dc_write_cfg(void* arg, int length)
         EPT(stderr, "%s:data_cfg thread waited so long! config operation stoped\n",__func__);
         goto func_exit;
     }
-    memset(&data_cfg, 0, sizeof(data_cfg));
+    memset((char*)data_cfg, 0, data_len);
     cfg_data_cnt = 0;
 
     for(pos1 = 0; pos1 < length; pos1++)
@@ -171,12 +172,12 @@ int dc_write_cfg(void* arg, int length)
                 goto func_exit;
             }
             strncpy(string, buf+pos1+1, pos2-1);
-            EPT(stderr, "%s:string:%s\n", __func__, string);
+            //EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (cfg_data_cnt-1)/2);
             if(1 == (cfg_data_cnt%2)){
-                strncpy(data_cfg[(cfg_data_cnt-1)/2].name, buf+pos1, pos2);
+                strcpy(data_cfg[(cfg_data_cnt-1)/2].name, string);
             }
             else{
-                strncpy(data_cfg[(cfg_data_cnt-1)/2].value, buf+pos1, pos2);
+                strcpy(data_cfg[(cfg_data_cnt-1)/2].value, string);
             } 
             pos1 += pos2;
         }
@@ -188,7 +189,7 @@ int dc_write_cfg(void* arg, int length)
             for(pos2 = 1;; pos2++)
             {
                 ch = *(buf+pos1+pos2);
-                if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= '9')){
+                if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
                     temp[pos_t++] = ch;
                     continue;
                 }
@@ -198,7 +199,7 @@ int dc_write_cfg(void* arg, int length)
                     }
                     else{
                         strcat(string, temp);
-                        strcat(string, "/");
+                        strcat(string, ":");
                         pos_t = 0;
                         memset(temp, 0, sizeof(temp));
                         continue;
@@ -221,7 +222,7 @@ int dc_write_cfg(void* arg, int length)
                     goto func_exit;
                 }
             }
-            EPT(stderr, "%s:string:%s\n", __func__, string);
+            //EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (cfg_data_cnt-1)/2);
             if(1 == (cfg_data_cnt%2)){
                 strcpy(data_cfg[(cfg_data_cnt-1)/2].name, string);
             }
@@ -243,12 +244,12 @@ int dc_write_cfg(void* arg, int length)
                     break;
             }
             strncpy(string, buf+pos1, pos2);
-            EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (cfg_data_cnt-1)/2);
+            //EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (cfg_data_cnt-1)/2);
             if(1 == (cfg_data_cnt%2)){
-                strncpy(data_cfg[(cfg_data_cnt-1)/2].name, buf+pos1, pos2);
+                strcpy(data_cfg[(cfg_data_cnt-1)/2].name, string);
             }
             else{
-                strncpy(data_cfg[(cfg_data_cnt-1)/2].value, buf+pos1, pos2);
+                strcpy(data_cfg[(cfg_data_cnt-1)/2].value, string);
             } 
             pos1 += (pos2 - 1);
         }
@@ -256,6 +257,10 @@ int dc_write_cfg(void* arg, int length)
 
     cfg_data_cnt = cfg_data_cnt/2;
     cfg_flag++;
+    for(pos1 = 0; pos1 < cfg_data_cnt; pos1++)
+    {
+        EPT(stderr, "%s %s\n", data_cfg[pos1].name, data_cfg[pos1].value);
+    }
     pthread_mutex_unlock(&dc_share.mutex);
 
 func_exit:

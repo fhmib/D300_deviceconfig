@@ -26,7 +26,9 @@ trans_data data_msg[] =
     {DNAME_BTYTYPE, 0, 0, NULL, NULL}
 };
 const int data_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
-dc_cfg data_cfg[data_cnt];  //use for config thread
+#define DATA_CNT        sizeof(data_msg)/sizeof(data_msg[0])
+const int data_len = sizeof(dc_cfg)*DATA_CNT;
+dc_cfg data_cfg[DATA_CNT];  //use for config thread
 int cfg_data_cnt;           //indecate how many configurations to be configured
 int cfg_flag;               //thread signal
 

@@ -1,6 +1,6 @@
 #include "dc_common.h"
 
-extern int dt_qid;
+//extern int dt_qid;
 
 int qs = 0;
 int re_qin = -1;            //index of receiving queue in qinfs 
@@ -156,13 +156,13 @@ int dc_queues_delete()
         msgctl(qinfs[re_qin].qid, IPC_RMID, NULL);
         qinfs[re_qin].qid = -1;
     }
-
+/*
     if(dt_qid != -1)
     {
         msgctl(dt_qid, IPC_RMID, NULL);
         dt_qid = -1;
     }
-
+*/
     return 0;
 }
 

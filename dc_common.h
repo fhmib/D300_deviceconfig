@@ -154,6 +154,14 @@ typedef struct _dc_cfg
     char value[256];
 }dc_cfg;
 
+typedef struct _cfg_node_list
+{
+    char name[64];
+    char value[256];
+    struct _cfg_node_list* next;
+}cfg_node;
+#define NODE_LENTH              sizeof(cfg_node)
+
 int     dc_init(void);
 void*   dc_qrv_thread(void*);
 void*   dc_cfg_thread(void*);
@@ -174,5 +182,7 @@ int     dc_get_qids(void* arg);
 int     dc_queues_delete(void);
 int     dc_msg_send(int, void*, int);
 //int dc_strstr(char* find, char* dest);
+
+int     dc_cfg_func(int);
 
 #endif

@@ -25,22 +25,18 @@ trans_data data_msg[] =
     {DNAME_BTYVOL, 0, 0, NULL, NULL},
     {DNAME_BTYTYPE, 0, 0, NULL, NULL}
 };
-const int data_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
+const int data_msg_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
 #define DATA_CNT        sizeof(data_msg)/sizeof(data_msg[0])
-const int data_len = sizeof(dc_cfg)*DATA_CNT;
+const int data_cfg_len = sizeof(dc_cfg)*DATA_CNT;
 dc_cfg data_cfg[DATA_CNT];  //use for config thread
-int cfg_data_cnt;           //indecate how many configurations to be configured
+int data_cfg_cnt;           //indecate how many configurations to be configured
 int cfg_flag;               //thread signal
-
-//extern trans_data data_msg[];
-//extern int data_cnt;
-//extern int read_first;
 
 static pthread_t mrx_tid;
 static pthread_t cfg_tid;
 
 MADR sa;                //self address
-int dt_qid;             //deviceconfig internal msg queue id
+//int dt_qid;             //deviceconfig internal msg queue id
 
 int main(int argc, char* argv[])
 {
@@ -215,7 +211,7 @@ int dc_init()
 
     read_first = 0;
     cfg_flag = 0;
-    cfg_data_cnt = 0;
+    data_cfg_cnt = 0;
 
     dc_msg_malloc();
 /*
@@ -237,7 +233,7 @@ void dc_msg_malloc()
     int i, len;
 
     len = 0;
-    for(i = 0; i < data_cnt; i++)
+    for(i = 0; i < data_msg_cnt; i++)
     {
         if(0 == strcmp(DNAME_NDID, data_msg[i].name)){
             len = 2;
@@ -326,7 +322,7 @@ void dc_mem_free()
 {
     int i;
     
-    for(i = 0; i < data_cnt; i++)
+    for(i = 0; i < data_msg_cnt; i++)
     {
         free(data_msg[i].pvalue);
     }
@@ -336,7 +332,7 @@ void dc_mem_free()
  * function:
  *      according the message from boa to config the machine
  * parameters:
- *      arg:                dcviceconfig internal queue id
+ *      arg:                boa queue id
  */
 void* dc_cfg_thread(void* arg)
 {
@@ -349,9 +345,16 @@ void* dc_cfg_thread(void* arg)
 
     while(1)
     {
-        sleep(1);
+        if(cfg_flag > 0 && read_first == 1){
+            rval = dc_cfg_func(boa_qid);
+            if(rval > 0){
+                goto thread_return;
+            }
+        }
+        else{
+            sleep(1);
+        }
     }
-    goto thread_return;
 
 thread_return:
     pthread_mutex_lock(&dc_share.mutex);

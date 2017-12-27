@@ -56,7 +56,8 @@ typedef enum _GB_MSG_TYPE
     MMSG_DC_BOAREAD = 5000,
     MMSG_DC_BOAWRITE,
     MMSG_DC_SNDBOA,
-    MMSG_DC_REQ
+    MMSG_DC_REQ,
+    MMSG_DC_ITN             //devcfg inernal msg type
 }GB_MSG;
 /*
 typedef enum _DC_MSG_TYPE
@@ -147,6 +148,12 @@ typedef struct _device_info_t
 */
 }device_info_t;
 
+typedef struct _dc_cfg
+{
+    char name[64];
+    char value[256];
+}dc_cfg;
+
 int     dc_init(void);
 void*   dc_qrv_thread(void*);
 void*   dc_cfg_thread(void*);
@@ -156,7 +163,8 @@ void    dc_msg_malloc(void);
 void    dc_mem_free(void);
 int     dc_msg_to_boa(mmsg_t*, U16);
 
-int    dc_read_2boa(void*, int);
+int     dc_read_2boa(void*, int);
+int     dc_write_cfg(void*, int);
 int     add_data(char*, int);
 void    dc_config(int, void*);
 //for test

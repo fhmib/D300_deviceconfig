@@ -2,8 +2,16 @@
 
 //extern device_info_t *dc_info;
 extern MADR sa;
+extern int dt_qid;
+extern int cfg_flag;
+extern int cfg_data_cnt;
 extern dc_tshare_t dc_share;
+extern trans_data data_msg[];
+extern int data_cnt;
+extern int read_first;
+extern dc_cfg* data_cfg;
 
+/*
 int read_first;             //the variable must be set 1 before config.
 trans_data data_msg[] =
 {
@@ -23,8 +31,18 @@ trans_data data_msg[] =
     {DNAME_BTYTYPE, 0, 0, NULL, NULL}
 };
 const int data_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
-
-int dc_read_2boa(void* arg, int lenth)
+*/
+/*
+ * function:
+ *      according to msg from boa, the function reads the information that boa wants and sends them to boa
+ * parameters:
+ *      arg:                receive data from boa
+ *      length:             data length
+ * return:
+ *      0:                  success
+ *      other:              failure
+ */
+int dc_read_2boa(void* arg, int length)
 {
     int len = 0;
     mmsg_t snd_msg;
@@ -34,25 +52,25 @@ int dc_read_2boa(void* arg, int lenth)
     char ch;
     int i, pos1, pos2;
 
-    if(lenth <= 0){
+    if(length <= 0){
         EPT(stderr, "%s:receive msg with wrong format\n",__func__);
         rval = 1;
         goto func_exit;
     }
     buf = (char*)arg;
 
+    memset(&snd_msg, 0, sizeof(snd_msg));
     snd_msg.mtype = MMSG_DC_SNDBOA;
     snd_msg.node = sa;
     len += sizeof(MADR);
-    len += sizeof(long);
 
     pthread_mutex_lock(&dc_share.mutex);
 
-    for(pos1 = 0; pos1 < lenth; pos1++)
+    for(pos1 = 0; pos1 < length; pos1++)
     {
-        memset(name, 0, sizeof(name));
         ch = *(buf+pos1);
         if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+            memset(name, 0, sizeof(name));
             for(pos2 = 1;;pos2++)
             {
                 ch = *(buf+pos1+pos2);
@@ -63,7 +81,7 @@ int dc_read_2boa(void* arg, int lenth)
                     break;
             }
             strncpy(name, buf+pos1, pos2);
-            EPT(stderr, "%s:name:%s\n", __func__, name);
+            //EPT(stderr, "%s:name:%s\n", __func__, name);
             for(i = 0; i < data_cnt; i++)
             {
                 if(0 == strcmp(data_msg[i].name, name)){
@@ -82,16 +100,163 @@ int dc_read_2boa(void* arg, int lenth)
 
     //put data to snd_msg.data
     rval = add_data(snd_msg.data, MAX_MSG_BUF);
-    EPT(stderr, "\nI'm in %s,%d, data content:", __func__, __LINE__);
+    EPT(stderr, "\nI'm in %s,%d,sending data content:", __func__, __LINE__);
     EPT(stderr, "\n%s\n", snd_msg.data);
     len += strlen(snd_msg.data);
 
-    pthread_mutex_unlock(&dc_share.mutex);
-
     //send message to boa
     dc_msg_to_boa(&snd_msg, len);
-    
+
     read_first = 1;
+
+    pthread_mutex_unlock(&dc_share.mutex);
+
+func_exit:
+    return rval;
+}
+
+/*
+ * function:
+ *      analyzes the msg from boa and sends them to deviceconfig internal queue
+ * parameters:
+ *      arg:                receive data from boa
+ *      length:             data length
+ * return:
+ *      0:                  success
+ *      other:              failure
+ */
+int dc_write_cfg(void* arg, int length)
+{
+    int rval = 0;
+    char* buf;
+    char ch, temp[8];
+    int pos1, pos2, pos_t;
+    char string[256];
+    
+    if(length <= 0){
+        EPT(stderr, "%s:receive msg with wrong format\n",__func__);
+        rval = 1;
+        goto func_exit;
+    }
+    buf = (char*)arg;
+
+    pthread_mutex_lock(&dc_share.mutex);
+
+    if(cfg_flag > 3){
+        rval = 2;
+        EPT(stderr, "%s:data_cfg thread waited so long! config operation stoped\n",__func__);
+        goto func_exit;
+    }
+    memset(&data_cfg, 0, sizeof(data_cfg));
+    cfg_data_cnt = 0;
+
+    for(pos1 = 0; pos1 < length; pos1++)
+    {
+        ch = *(buf+pos1);
+        if(ch == '"'){
+            cfg_data_cnt++;
+            memset(string, 0, sizeof(string));
+            for(pos2 = 1;; pos2++)
+            {
+                ch = *(buf+pos1+pos2);
+                if(ch != '"'){
+                    continue;
+                }
+                else
+                    break;
+            }
+            if(pos2 < 2){
+                EPT(stderr, "%s,%d:wrong format\n", __func__, __LINE__);
+                rval = 3;
+                goto func_exit;
+            }
+            strncpy(string, buf+pos1+1, pos2-1);
+            EPT(stderr, "%s:string:%s\n", __func__, string);
+            if(1 == (cfg_data_cnt%2)){
+                strncpy(data_cfg[(cfg_data_cnt-1)/2].name, buf+pos1, pos2);
+            }
+            else{
+                strncpy(data_cfg[(cfg_data_cnt-1)/2].value, buf+pos1, pos2);
+            } 
+            pos1 += pos2;
+        }
+        else if(ch == '['){
+            cfg_data_cnt++;
+            pos_t = 0;
+            memset(string, 0, sizeof(string));
+            memset(temp, 0, sizeof(temp));
+            for(pos2 = 1;; pos2++)
+            {
+                ch = *(buf+pos1+pos2);
+                if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= 0 && ch <= '9')){
+                    temp[pos_t++] = ch;
+                    continue;
+                }
+                else if(ch == ',' || ch == ' '){
+                    if(pos_t == 0){
+                        continue;
+                    }
+                    else{
+                        strcat(string, temp);
+                        strcat(string, "/");
+                        pos_t = 0;
+                        memset(temp, 0, sizeof(temp));
+                        continue;
+                    }
+                }
+                else if(ch == ']'){
+                    if(pos_t == 0){
+                        break;
+                    }
+                    else{
+                        strcat(string, temp);
+                        pos_t = 0;
+                        memset(temp, 0, sizeof(temp));
+                        break;
+                    }
+                }
+                else{
+                    EPT(stderr, "%s,%d:wrong format\n", __func__, __LINE__);
+                    rval = 3;
+                    goto func_exit;
+                }
+            }
+            EPT(stderr, "%s:string:%s\n", __func__, string);
+            if(1 == (cfg_data_cnt%2)){
+                strcpy(data_cfg[(cfg_data_cnt-1)/2].name, string);
+            }
+            else{
+                strcpy(data_cfg[(cfg_data_cnt-1)/2].value, string);
+            } 
+            pos1 += pos2;
+        }
+        else if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+            cfg_data_cnt++;
+            memset(string, 0, sizeof(string));
+            for(pos2 = 1;; pos2++)
+            {
+                ch = *(buf+pos1+pos2);
+                if(ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+                    continue;
+                }
+                else
+                    break;
+            }
+            strncpy(string, buf+pos1, pos2);
+            EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (cfg_data_cnt-1)/2);
+            if(1 == (cfg_data_cnt%2)){
+                strncpy(data_cfg[(cfg_data_cnt-1)/2].name, buf+pos1, pos2);
+            }
+            else{
+                strncpy(data_cfg[(cfg_data_cnt-1)/2].value, buf+pos1, pos2);
+            } 
+            pos1 += (pos2 - 1);
+        }
+    }
+
+    cfg_data_cnt = cfg_data_cnt/2;
+    cfg_flag++;
+    pthread_mutex_unlock(&dc_share.mutex);
 
 func_exit:
     return rval;

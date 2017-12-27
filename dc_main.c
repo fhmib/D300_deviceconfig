@@ -7,9 +7,32 @@ extern int cnt_p;
 extern char pname[64];
 extern dc_tshare_t dc_share;
 
-extern trans_data data_msg[];
-extern int data_cnt;
-extern int read_first;
+int read_first;             //the variable must be set 1 before config.
+trans_data data_msg[] =
+{
+    {DNAME_NDID, 0, 0, NULL, NULL},
+    {DNAME_NDNAME, 0, 1, NULL, NULL},
+    {DNAME_FREQ, 0, 0, NULL, NULL},
+    {DNAME_BW, 0, 0, NULL, NULL},
+    {DNAME_TX1, 0, 0, NULL, NULL},
+    {DNAME_TX2, 0, 0, NULL, NULL},
+    {DNAME_RSAN0, 0, 0, NULL, NULL},
+    {DNAME_RSAN1, 0, 0, NULL, NULL},
+    {DNAME_IPADDR, 0, 1, NULL, NULL},
+    {DNAME_IPMASK, 0, 1, NULL, NULL},
+    {DNAME_IPGATE, 0, 1, NULL, NULL},
+    {DNAME_RTC, 0, 0, NULL, NULL},
+    {DNAME_BTYVOL, 0, 0, NULL, NULL},
+    {DNAME_BTYTYPE, 0, 0, NULL, NULL}
+};
+const int data_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
+dc_cfg data_cfg[data_cnt];  //use for config thread
+int cfg_data_cnt;           //indecate how many configurations to be configured
+int cfg_flag;               //thread signal
+
+//extern trans_data data_msg[];
+//extern int data_cnt;
+//extern int read_first;
 
 static pthread_t mrx_tid;
 static pthread_t cfg_tid;
@@ -165,6 +188,7 @@ int dc_rmsg_proc(int len, void* data)
             dc_read_2boa(rmsg->data, len-sizeof(MADR));
             break;
         case MMSG_DC_BOAWRITE:
+            dc_write_cfg(rmsg->data, len-sizeof(MADR));
             break;
         default:
             EPT(stderr, "%s:receive unknown msg type, no = %ld\n", __func__, rmsg->mtype);
@@ -184,13 +208,15 @@ func_exit:
  */
 int dc_init()
 {
-    key_t key;
+    //key_t key;
     int rval = 0;
 
     read_first = 0;
+    cfg_flag = 0;
+    cfg_data_cnt = 0;
 
     dc_msg_malloc();
-
+/*
     key = ftok(PATH_CREAT_KEY, SN_DC_THREAD);
     dt_qid = msgget(key, IPC_CREAT | QUEUE_MODE);
     EPT(stderr, "node[%d] create dt_qid = %d, key = %x", sa, dt_qid, key);
@@ -199,8 +225,8 @@ int dc_init()
         rval = 1;
         goto func_exit;
     }
-
-func_exit:
+*/
+//func_exit:
     return rval;
 }
 

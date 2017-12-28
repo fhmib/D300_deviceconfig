@@ -33,7 +33,7 @@ int main()
     test_msg_data.mtype = MMSG_DC_BOAWRITE;
     test_msg_data.node = 3;
     test_len += sizeof(MADR);
-    strcpy(test_msg_data.data, "\"NodeName\": \"rzxt_node[3]\" \"TX1Power\": Abcc \"TX2Power\": 122a \"HaveRTC\": 0 \"Rssi_Ant0\": [12, 32, r3, ba, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
+    strcpy(test_msg_data.data, "\"NodeName\": \"RZXT_NODE[3]\" \"TX1Power\": Abcc \"TX2Power\": 122a \"HaveRTC\": 0 \"Rssi_Ant0\": [12, 32, r3, ba, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
     test_len += strlen(test_msg_data.data);
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);
 

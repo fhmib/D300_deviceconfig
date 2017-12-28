@@ -132,6 +132,8 @@ int dc_write_cfg(void* arg, int length)
     char* buf;
     char ch, temp[8];
     int pos1, pos2, pos_t;
+    int judge;
+    char name_tmp[64];
     char string[256];
     
     if(length <= 0){
@@ -172,13 +174,6 @@ int dc_write_cfg(void* arg, int length)
                 goto func_exit;
             }
             strncpy(string, buf+pos1+1, pos2-1);
-            //EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (data_cfg_cnt-1)/2);
-            if(1 == (data_cfg_cnt%2)){
-                strcpy(data_cfg[(data_cfg_cnt-1)/2].name, string);
-            }
-            else{
-                strcpy(data_cfg[(data_cfg_cnt-1)/2].value, string);
-            } 
             pos1 += pos2;
         }
         else if(ch == '['){
@@ -186,20 +181,21 @@ int dc_write_cfg(void* arg, int length)
             pos_t = 0;
             memset(string, 0, sizeof(string));
             memset(temp, 0, sizeof(temp));
+            string[0] = '[';
             for(pos2 = 1;; pos2++)
             {
                 ch = *(buf+pos1+pos2);
-                if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+                if(ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
                     temp[pos_t++] = ch;
                     continue;
                 }
-                else if(ch == ',' || ch == ' '){
+                else if(ch == ','){
                     if(pos_t == 0){
                         continue;
                     }
                     else{
                         strcat(string, temp);
-                        strcat(string, ":");
+                        strcat(string, ", ");
                         pos_t = 0;
                         memset(temp, 0, sizeof(temp));
                         continue;
@@ -211,24 +207,19 @@ int dc_write_cfg(void* arg, int length)
                     }
                     else{
                         strcat(string, temp);
+                        strcat(string, "]");
                         pos_t = 0;
                         memset(temp, 0, sizeof(temp));
                         break;
                     }
                 }
-                else{
+
+                if(pos2 >= 256){
                     EPT(stderr, "%s,%d:wrong format\n", __func__, __LINE__);
                     rval = 3;
                     goto func_exit;
                 }
             }
-            //EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (data_cfg_cnt-1)/2);
-            if(1 == (data_cfg_cnt%2)){
-                strcpy(data_cfg[(data_cfg_cnt-1)/2].name, string);
-            }
-            else{
-                strcpy(data_cfg[(data_cfg_cnt-1)/2].value, string);
-            } 
             pos1 += pos2;
         }
         else if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
@@ -244,23 +235,44 @@ int dc_write_cfg(void* arg, int length)
                     break;
             }
             strncpy(string, buf+pos1, pos2);
-            //EPT(stderr, "%s:string:%s,no:%d\n", __func__, string, (data_cfg_cnt-1)/2);
-            if(1 == (data_cfg_cnt%2)){
-                strcpy(data_cfg[(data_cfg_cnt-1)/2].name, string);
-            }
-            else{
-                strcpy(data_cfg[(data_cfg_cnt-1)/2].value, string);
-            } 
             pos1 += (pos2 - 1);
+        }
+        else{
+            continue;
+        }
+
+        if(1 == (data_cfg_cnt%2)){
+            if(64 < strlen(string)){
+                EPT(stderr, "%s:wrong name str\n", __func__);
+                data_cfg_cnt = 0;
+                break;
+            }
+                memset(name_tmp, 0, sizeof(name_tmp));
+                strcpy(name_tmp, string);
+                //EPT(stderr, "name_tmp:%s\n", name_tmp);
+        }
+        else{
+            //judge the same between data from boa and old data
+            judge = data_cfg_judge(name_tmp, string);
+            if(judge){
+                data_cfg_cnt -= 2;
+                continue;
+            }
+            strcpy(data_cfg[(data_cfg_cnt-1)/2].name, name_tmp);
+            strcpy(data_cfg[(data_cfg_cnt-1)/2].value, string);
         }
     }
 
     data_cfg_cnt = data_cfg_cnt/2;
-    cfg_flag++;
+    if(data_cfg_cnt > 0){
+        cfg_flag++;
+    }
+    /*
     for(pos1 = 0; pos1 < data_cfg_cnt; pos1++)
     {
         EPT(stderr, "%s %s\n", data_cfg[pos1].name, data_cfg[pos1].value);
     }
+    */
     pthread_mutex_unlock(&dc_share.mutex);
 
 func_exit:
@@ -325,6 +337,33 @@ int add_data(char* arg, int length)
     strcpy(arg, buf);
 func_exit:
     return rval;
+}
+
+/*
+ * function:
+ *      judge if the value from boa is the same with data_msg
+ * parameters:
+ *      index:              index of data_cfg
+ * return:
+ *      0:                  diff
+ *      1:                  same
+ *      2:                  not find the name of data_msg
+ */
+int data_cfg_judge(char* name, char* value)
+{
+    int i;
+
+    for(i = 0; i < data_msg_cnt; i++)
+    {
+        if(0 == strcmp(name, data_msg[i].name)){
+            if(0 == strcmp(value, data_msg[i].pvalue))
+                return 1;
+            else
+                return 0;
+        }
+    }
+    EPT(stderr, "%s:can not find the name from data_msg:%s\n", __func__, name);
+    return 2;
 }
 
 void write_data_for_test()

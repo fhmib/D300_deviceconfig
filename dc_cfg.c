@@ -26,9 +26,10 @@ int dc_cfg_func(int arg)
     pthread_mutex_lock(&dc_share.mutex);
 
     if(data_cfg_cnt <= 0){
-        pthread_mutex_unlock(&dc_share.mutex);
+        cfg_flag = 0;
         EPT(stderr, "%s:no msg!\n", __func__);
         rval = 2;
+        pthread_mutex_unlock(&dc_share.mutex);
         goto func_exit;
     }
     cfg_flag = 0;

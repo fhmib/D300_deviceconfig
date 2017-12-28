@@ -174,7 +174,7 @@ int     dc_msg_to_boa(mmsg_t*, U16);
 int     dc_read_2boa(void*, int);
 int     dc_write_cfg(void*, int);
 int     add_data(char*, int);
-void    dc_config(int, void*);
+int     data_cfg_judge(char*, char*);
 //for test
 void    write_data_for_test(void);
 

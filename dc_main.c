@@ -339,17 +339,19 @@ void* dc_cfg_thread(void* arg)
     int qid;
     int rval = 0;
 
-    qid = *(int*)arg;
     pthread_detach(pthread_self());
-    EPT(stderr, "%s:I'm in dc_cfg_thread\n", qinfs[re_qin].pname);
+
+    qid = *(int*)arg;
+    if(qid < 0){
+        rval = 1;
+        EPT(stderr, "%s:boa_qid = %d\n", __func__, qid);
+        goto thread_return;
+    }
 
     while(1)
     {
         if(cfg_flag > 0 && read_first == 1){
-            rval = dc_cfg_func(boa_qid);
-            if(rval > 0){
-                goto thread_return;
-            }
+            rval = dc_cfg_func(qid);
         }
         else{
             sleep(1);

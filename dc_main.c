@@ -214,6 +214,8 @@ int dc_init()
     data_cfg_cnt = 0;
 
     dc_msg_malloc();
+    //for test
+    write_data_for_test();
 /*
     key = ftok(PATH_CREAT_KEY, SN_DC_THREAD);
     dt_qid = msgget(key, IPC_CREAT | QUEUE_MODE);

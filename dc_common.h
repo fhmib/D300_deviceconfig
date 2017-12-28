@@ -80,7 +80,7 @@ typedef struct _trans_data
     char    enable;
     char    isstr;
     char*   pvalue;
-    int     (*opera)(void*);
+    int     (*opera)(void*,int);
 }trans_data;
 
 //struct for the data sharing among thread
@@ -174,7 +174,7 @@ int     dc_msg_to_boa(mmsg_t*, U16);
 int     dc_read_2boa(void*, int);
 int     dc_write_cfg(void*, int);
 int     add_data(char*, int);
-int     data_cfg_judge(char*, char*);
+//int     data_cfg_judge(char*, char*);
 //for test
 void    write_data_for_test(void);
 
@@ -184,5 +184,6 @@ int     dc_msg_send(int, void*, int);
 //int dc_strstr(char* find, char* dest);
 
 int     dc_cfg_func(int);
+int     update_data_msg(char*, char*);
 
 #endif

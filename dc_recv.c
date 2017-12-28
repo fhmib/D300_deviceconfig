@@ -75,7 +75,7 @@ int dc_read_2boa(void* arg, int length)
             for(pos2 = 1;;pos2++)
             {
                 ch = *(buf+pos1+pos2);
-                if(ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+                if(ch == '.' || ch == '-' || ch == '_' || ch == '[' || ch == ']' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
                     continue;
                 }
                 else
@@ -97,12 +97,12 @@ int dc_read_2boa(void* arg, int length)
     //rval = update_data_msg();
     
     //for test
-    write_data_for_test();
+    //write_data_for_test();
 
     //put data to snd_msg.data
     rval = add_data(snd_msg.data, MAX_MSG_BUF);
-    EPT(stderr, "\nI'm in %s,%d,sending data content:", __func__, __LINE__);
-    EPT(stderr, "\n%s\n", snd_msg.data);
+    //EPT(stderr, "\nI'm in %s,%d,sending data content:", __func__, __LINE__);
+    //EPT(stderr, "\n%s\n", snd_msg.data);
     len += strlen(snd_msg.data);
 
     //send message to boa
@@ -132,8 +132,8 @@ int dc_write_cfg(void* arg, int length)
     char* buf;
     char ch, temp[8];
     int pos1, pos2, pos_t;
-    int judge;
-    char name_tmp[64];
+    //int judge;
+    //char name_tmp[64];
     char string[256];
     
     if(length <= 0){
@@ -147,7 +147,8 @@ int dc_write_cfg(void* arg, int length)
 
     if(cfg_flag > 2){
         rval = 2;
-        EPT(stderr, "%s:data_cfg thread waited so long or write frequently. config operation stoped\n",__func__);
+        EPT(stderr, "%s:data_cfg thread waited so long or write frequently. config operation stopped\n",__func__);
+        pthread_mutex_unlock(&dc_share.mutex);
         goto func_exit;
     }
     memset((char*)data_cfg, 0, data_cfg_len);
@@ -185,7 +186,7 @@ int dc_write_cfg(void* arg, int length)
             for(pos2 = 1;; pos2++)
             {
                 ch = *(buf+pos1+pos2);
-                if(ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+                if(ch == '.' || ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
                     temp[pos_t++] = ch;
                     continue;
                 }
@@ -228,7 +229,7 @@ int dc_write_cfg(void* arg, int length)
             for(pos2 = 1;; pos2++)
             {
                 ch = *(buf+pos1+pos2);
-                if(ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
+                if(ch == '.' || ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
                     continue;
                 }
                 else
@@ -247,18 +248,19 @@ int dc_write_cfg(void* arg, int length)
                 data_cfg_cnt = 0;
                 break;
             }
-                memset(name_tmp, 0, sizeof(name_tmp));
-                strcpy(name_tmp, string);
-                //EPT(stderr, "name_tmp:%s\n", name_tmp);
+            //memset(name_tmp, 0, sizeof(name_tmp));
+            //strcpy(name_tmp, string);
+            //EPT(stderr, "name_tmp:%s\n", name_tmp);
+            strcpy(data_cfg[(data_cfg_cnt-1)/2].name, string);
         }
         else{
             //judge the same between data from boa and old data
-            judge = data_cfg_judge(name_tmp, string);
-            if(judge){
-                data_cfg_cnt -= 2;
-                continue;
-            }
-            strcpy(data_cfg[(data_cfg_cnt-1)/2].name, name_tmp);
+            //judge = data_cfg_judge(name_tmp, string);
+            //if(judge){
+            //    data_cfg_cnt -= 2;
+            //    continue;
+            //}
+            //strcpy(data_cfg[(data_cfg_cnt-1)/2].name, name_tmp);
             strcpy(data_cfg[(data_cfg_cnt-1)/2].value, string);
         }
     }
@@ -349,6 +351,7 @@ func_exit:
  *      1:                  same
  *      2:                  not find the name of data_msg
  */
+/*
 int data_cfg_judge(char* name, char* value)
 {
     int i;
@@ -365,6 +368,7 @@ int data_cfg_judge(char* name, char* value)
     EPT(stderr, "%s:can not find the name from data_msg:%s\n", __func__, name);
     return 2;
 }
+*/
 
 void write_data_for_test()
 {
@@ -381,8 +385,8 @@ void write_data_for_test()
     strcpy(data_msg[3].pvalue, "2.5");
     strcpy(data_msg[4].pvalue, "ab12");
     strcpy(data_msg[5].pvalue, "1122");
-    strcpy(data_msg[6].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]");
-    strcpy(data_msg[7].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]");
+    strcpy(data_msg[6].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
+    strcpy(data_msg[7].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
     strcpy(data_msg[8].pvalue, "192.168.3.240");
     strcpy(data_msg[9].pvalue, "255.255.255.0");
     strcpy(data_msg[10].pvalue, "192.168.3.1");

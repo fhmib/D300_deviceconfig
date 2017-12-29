@@ -7,9 +7,11 @@ int main()
     key_t test_boa_key_q;
     key_t test_dc_key_q;
     mmsg_t test_msg_data;
+    mmsg_t test_rcv_data;
     int test_len = 0;
 
     memset(&test_msg_data, 0, sizeof(test_msg_data));
+    memset(&test_rcv_data, 0, sizeof(test_rcv_data));
 
     test_boa_key_q = ftok(PATH_CREAT_KEY, SN_BOA);
     test_boa_qid = msgget(test_boa_key_q, IPC_CREAT|QUEUE_MODE);
@@ -23,6 +25,7 @@ int main()
     strcpy(test_msg_data.data, "\"NodeName\": \"RZXT_NODE[3]\" \"TX1Power\": Abcc \"TX2Power\": 122a \"HaveRTC\": 0 \"Rssi_Ant0\": [12, 32, r3, ba, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]");
     test_len += strlen(test_msg_data.data);
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);
+    msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, MMSG_DC_REQ, 0);
 
     return 0;
 }

@@ -13,27 +13,6 @@ extern int read_first;
 extern dc_cfg data_cfg[];
 
 /*
-int read_first;             //the variable must be set 1 before config.
-trans_data data_msg[] =
-{
-    {DNAME_NDID, 0, 0, NULL, NULL},
-    {DNAME_NDNAME, 0, 1, NULL, NULL},
-    {DNAME_FREQ, 0, 0, NULL, NULL},
-    {DNAME_BW, 0, 0, NULL, NULL},
-    {DNAME_TX1, 0, 0, NULL, NULL},
-    {DNAME_TX2, 0, 0, NULL, NULL},
-    {DNAME_RSAN0, 0, 0, NULL, NULL},
-    {DNAME_RSAN1, 0, 0, NULL, NULL},
-    {DNAME_IPADDR, 0, 1, NULL, NULL},
-    {DNAME_IPMASK, 0, 1, NULL, NULL},
-    {DNAME_IPGATE, 0, 1, NULL, NULL},
-    {DNAME_RTC, 0, 0, NULL, NULL},
-    {DNAME_BTYVOL, 0, 0, NULL, NULL},
-    {DNAME_BTYTYPE, 0, 0, NULL, NULL}
-};
-const int data_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
-*/
-/*
  * function:
  *      according to msg from boa, the function reads the information that boa wants and sends them to boa
  * parameters:
@@ -96,9 +75,6 @@ int dc_read_2boa(void* arg, int length)
     //update device_info;
     //rval = update_data_msg();
     
-    //for test
-    //write_data_for_test();
-
     //put data to snd_msg.data
     rval = add_data(snd_msg.data, MAX_MSG_BUF);
     //EPT(stderr, "\nI'm in %s,%d,sending data content:", __func__, __LINE__);
@@ -248,19 +224,9 @@ int dc_write_cfg(void* arg, int length)
                 data_cfg_cnt = 0;
                 break;
             }
-            //memset(name_tmp, 0, sizeof(name_tmp));
-            //strcpy(name_tmp, string);
-            //EPT(stderr, "name_tmp:%s\n", name_tmp);
             strcpy(data_cfg[(data_cfg_cnt-1)/2].name, string);
         }
         else{
-            //judge the same between data from boa and old data
-            //judge = data_cfg_judge(name_tmp, string);
-            //if(judge){
-            //    data_cfg_cnt -= 2;
-            //    continue;
-            //}
-            //strcpy(data_cfg[(data_cfg_cnt-1)/2].name, name_tmp);
             strcpy(data_cfg[(data_cfg_cnt-1)/2].value, string);
         }
     }
@@ -340,35 +306,6 @@ int add_data(char* arg, int length)
 func_exit:
     return rval;
 }
-
-/*
- * function:
- *      judge if the value from boa is the same with data_msg
- * parameters:
- *      index:              index of data_cfg
- * return:
- *      0:                  diff
- *      1:                  same
- *      2:                  not find the name of data_msg
- */
-/*
-int data_cfg_judge(char* name, char* value)
-{
-    int i;
-
-    for(i = 0; i < data_msg_cnt; i++)
-    {
-        if(0 == strcmp(name, data_msg[i].name)){
-            if(0 == strcmp(value, data_msg[i].pvalue))
-                return 1;
-            else
-                return 0;
-        }
-    }
-    EPT(stderr, "%s:can not find the name from data_msg:%s\n", __func__, name);
-    return 2;
-}
-*/
 
 void write_data_for_test()
 {

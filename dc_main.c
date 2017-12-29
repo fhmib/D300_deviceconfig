@@ -352,7 +352,7 @@ void* dc_cfg_thread(void* arg)
 
     while(1)
     {
-        if(cfg_flag > 0 && read_first == 1){
+        if(cfg_flag > 0){
             rval = dc_cfg_func(qid);
         }
         else{

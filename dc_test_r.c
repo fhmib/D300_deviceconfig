@@ -25,7 +25,7 @@ int main()
     test_len += strlen(test_msg_data.data);
 
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);
-    msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, 0, 0);
+    msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, MMSG_DC_SNDBOA, 0);
 
     printf("%s:data:\n%s\n", __FILE__, test_rcv_data.data);
 

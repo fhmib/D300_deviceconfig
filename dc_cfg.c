@@ -6,12 +6,16 @@ extern int data_len;
 extern dc_cfg data_cfg[];
 extern int data_cfg_cnt;
 extern int cfg_flag;
+extern int read_first;
 extern dc_tshare_t dc_share;
+extern MADR sa;
 
 int dc_cfg_func(int arg)
 {
     int qid, i, count;
     int rval = 0;
+    int len = 0;
+    mmsg_t snd_msg;
     cfg_node* node_list_h = NULL;              //head of node list
     cfg_node* node_list_p = NULL;              //current position of node list
 
@@ -25,6 +29,14 @@ int dc_cfg_func(int arg)
 
     pthread_mutex_lock(&dc_share.mutex);
 
+    if(read_first == 0){
+        cfg_flag = 0;
+        data_cfg_cnt = 0;
+        EPT(stderr, "%s:must read first!\n", __func__);
+        rval = 3;
+        pthread_mutex_unlock(&dc_share.mutex);
+        goto func_exit;
+    }
     if(data_cfg_cnt <= 0){
         cfg_flag = 0;
         EPT(stderr, "%s:no msg!\n", __func__);
@@ -34,6 +46,7 @@ int dc_cfg_func(int arg)
     }
     cfg_flag = 0;
     count = data_cfg_cnt;
+    //EPT(stderr, "%s:I'm ready for update data_msg!\n", __func__);
     for(i = 0; i < count; i++)
     {
         rval = update_data_msg(data_cfg[i].name, data_cfg[i].value);
@@ -55,6 +68,12 @@ int dc_cfg_func(int arg)
     }
 
     pthread_mutex_unlock(&dc_share.mutex);
+
+    memset(&snd_msg, 0, sizeof(snd_msg));
+    snd_msg.mtype = MMSG_DC_REQ;
+    snd_msg.node = sa;
+    len += sizeof(MADR);
+    dc_msg_to_boa(&snd_msg, len);
 /*
     node_list_p = node_list_h;
     while(NULL != node_list_p)

@@ -25,7 +25,7 @@ int main()
     strcpy(test_msg_data.data, "\"NodeName\": \"RZXT_NODE[3]\" \"TX1Power\": Abcc \"TX2Power\": 122a \"HaveRTC\": 0 \"Rssi_Ant0\": [12, 32, r3, ba, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]");
     test_len += strlen(test_msg_data.data);
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);
-    msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, MMSG_DC_REQ, 0);
+    msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, MMSG_DC_RET, 0);
 
     return 0;
 }

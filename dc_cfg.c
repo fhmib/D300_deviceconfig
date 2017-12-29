@@ -70,7 +70,7 @@ int dc_cfg_func(int arg)
     pthread_mutex_unlock(&dc_share.mutex);
 
     memset(&snd_msg, 0, sizeof(snd_msg));
-    snd_msg.mtype = MMSG_DC_REQ;
+    snd_msg.mtype = MMSG_DC_RET;
     snd_msg.node = sa;
     len += sizeof(MADR);
     dc_msg_to_boa(&snd_msg, len);

@@ -56,7 +56,7 @@ typedef enum _GB_MSG_TYPE
     MMSG_DC_BOAREAD = 5000,
     MMSG_DC_BOAWRITE,
     MMSG_DC_SNDBOA,
-    MMSG_DC_REQ,
+    MMSG_DC_RET,
     MMSG_DC_ITN             //devcfg inernal msg type
 }GB_MSG;
 /*

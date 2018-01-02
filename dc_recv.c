@@ -73,7 +73,7 @@ int dc_read_2boa(void* arg, int length)
     }
 
     //update device_info;
-    //rval = update_data_msg();
+    rval = write_data_msg();
     
     //put data to snd_msg.data
     rval = add_data(snd_msg.data, MAX_MSG_BUF);
@@ -249,9 +249,37 @@ func_exit:
 
 /*
  * function:
+ *      read data from device and write to data_msg
+ * return:
+ *      0:          success
+ *      other:      failure
+ */
+int write_data_msg()
+{
+    int i;
+    int rval = 0;
+    
+    for(i = 0; i < data_msg_cnt; i++){
+        //EPT(stderr, "%s:data_msg[%d].enable=%d\n", __func__, i, data_msg[i].enable);
+        if(data_msg[i].enable == 0){
+            continue;
+        }
+        rval = data_msg[i].opera(data_msg[i].pvalue, 0);
+        if(0 != rval){
+            EPT(stderr, "%s:read parameter from device failed!\n", __func__);
+            goto func_exit;
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
+/*
+ * function:
  *      put data_msg to arg
  * parameters:
- *      arg:        data buffer
+ *      arg:           data buffer
  *      length:        max size of arg
  * return:
  *      0:          success

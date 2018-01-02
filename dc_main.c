@@ -1,4 +1,5 @@
 #include "dc_common.h"
+#include "dc_monitor.h"
 
 extern int qs;
 extern int re_qin, dc_qid, boa_qid;
@@ -10,10 +11,12 @@ extern dc_tshare_t dc_share;
 int read_first;             //the variable must be set 1 before config.
 trans_data data_msg[] =
 {
-    {DNAME_NDID, 0, 0, NULL, NULL},
+    {DNAME_NDID, 0, 0, NULL, dc_cfg_nodeid},
     {DNAME_NDNAME, 0, 1, NULL, NULL},
     {DNAME_FREQ, 0, 0, NULL, NULL},
     {DNAME_BW, 0, 0, NULL, NULL},
+    {DNAME_TFCI, 0, 0, NULL, NULL},
+    {DNAME_MMODE, 0, 1, NULL, NULL},
     {DNAME_TX1, 0, 0, NULL, NULL},
     {DNAME_TX2, 0, 0, NULL, NULL},
     {DNAME_RSAN0, 0, 0, NULL, NULL},
@@ -254,6 +257,16 @@ void dc_msg_malloc()
         }
         else if(0 == strcmp(DNAME_BW, data_msg[i].name)){
             len = 4;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_TFCI, data_msg[i].name)){
+            len = 4;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_MMODE, data_msg[i].name)){
+            len = 6;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }

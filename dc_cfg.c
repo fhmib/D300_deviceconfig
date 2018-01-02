@@ -69,6 +69,19 @@ int dc_cfg_func(int arg)
 
     pthread_mutex_unlock(&dc_share.mutex);
 
+    node_list_p = node_list_h;
+    while(1){
+        if(NULL == node_list_p)
+            break;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(node_list_p->name, data_msg[i].name)){
+                rval = data_msg[i].opera(node_list_p->value, 1);
+                break;
+            }
+        }
+        node_list_p = node_list_p->next;
+    }
+
     memset(&snd_msg, 0, sizeof(snd_msg));
     snd_msg.mtype = MMSG_DC_RET;
     snd_msg.node = sa;

@@ -196,3 +196,22 @@ int dc_msg_send(int qid, void* msg, int len)
 func_exit:
     return rval;
 }
+
+/*
+ * function:
+ *      get file length
+ * parameters:
+ *      filename:               file's path
+ * return:
+ *      file length
+ */
+int file_size(char* filename)
+{
+    struct stat statbuf;
+    int size;
+
+    stat(filename, &statbuf);
+    size = statbuf.st_size;
+
+    return size;
+}

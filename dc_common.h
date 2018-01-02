@@ -40,6 +40,8 @@
 #define DNAME_NDNAME        "NodeName"
 #define DNAME_FREQ          "CentreFreq"
 #define DNAME_BW            "ChannelBandwidth"
+#define DNAME_TFCI          "TFCI"
+#define DNAME_MMODE         "ModulationMode"
 #define DNAME_TX1           "TX1Power"
 #define DNAME_TX2           "TX2Power"
 #define DNAME_RSAN0         "Rssi_Ant0"
@@ -173,6 +175,7 @@ int     dc_msg_to_boa(mmsg_t*, U16);
 
 int     dc_read_2boa(void*, int);
 int     dc_write_cfg(void*, int);
+int     write_data_msg(void);
 int     add_data(char*, int);
 //int     data_cfg_judge(char*, char*);
 //for test
@@ -181,6 +184,7 @@ void    write_data_for_test(void);
 int     dc_get_qids(void* arg);
 int     dc_queues_delete(void);
 int     dc_msg_send(int, void*, int);
+int     file_size(char*);
 //int dc_strstr(char* find, char* dest);
 
 int     dc_cfg_func(int);

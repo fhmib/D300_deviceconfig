@@ -21,7 +21,8 @@ int main()
     test_msg_data.mtype = MMSG_DC_BOAREAD;
     test_msg_data.node = 3;
     test_len += sizeof(MADR);
-    strcpy(test_msg_data.data, "NodeId");
+    //strcpy(test_msg_data.data, "NodeId");
+    strcpy(test_msg_data.data, "NodeName");
     test_len += strlen(test_msg_data.data);
 
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);

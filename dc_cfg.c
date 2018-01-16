@@ -75,8 +75,14 @@ int dc_cfg_func(int arg)
             break;
         for(i = 0; i < data_msg_cnt; i++){
             if(0 == strcmp(node_list_p->name, data_msg[i].name)){
-                rval = data_msg[i].opera(node_list_p->value, 1);
-                break;
+                if(data_msg[i].opera){
+                    rval = data_msg[i].opera(node_list_p->value, 1);
+                    break;
+                }
+                else{
+                    EPT(stderr, "%s:no matching operation for %s\n", __func__, node_list_p->name);
+                    break;
+                }
             }
         }
         node_list_p = node_list_p->next;

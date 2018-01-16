@@ -12,7 +12,7 @@ int read_first;             //the variable must be set 1 before config.
 trans_data data_msg[] =
 {
     {DNAME_NDID, 0, 0, NULL, dc_cfg_nodeid},
-    {DNAME_NDNAME, 0, 1, NULL, NULL},
+    {DNAME_NDNAME, 0, 1, NULL, dc_cfg_nodename},
     {DNAME_FREQ, 0, 0, NULL, NULL},
     {DNAME_BW, 0, 0, NULL, NULL},
     {DNAME_TFCI, 0, 0, NULL, NULL},

@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <sys/ipc.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/msg.h>

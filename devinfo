@@ -1,5 +1,8 @@
 fwefkldsnj;fa
 f124rq
 #jdswfklow
-NodeName= rzxt_124mech   
+    NodeName=rzxt_mech[1e3]
+    RTC= 1 
+    BTYVOL= 12
+    BTYTYPE= none
 fdolsz;a

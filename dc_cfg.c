@@ -1,4 +1,5 @@
 #include "dc_common.h"
+#include "dc_monitor.h"
 
 extern trans_data data_msg[];
 extern int data_msg_cnt;
@@ -15,6 +16,8 @@ int dc_cfg_func(int arg)
     int qid, i, count;
     int rval = 0;
     int len = 0;
+    int fd;
+
     mmsg_t snd_msg;
     cfg_node* node_list_h = NULL;              //head of node list
     cfg_node* node_list_p = NULL;              //current position of node list
@@ -69,6 +72,11 @@ int dc_cfg_func(int arg)
 
     pthread_mutex_unlock(&dc_share.mutex);
 
+    rval = drvFPGA_Init(&fd);
+    if(rval){
+        EPT(stderr, "%s:initialize drvFPGA failed\n", __func__);
+        goto func_exit;
+    }
     node_list_p = node_list_h;
     while(1){
         if(NULL == node_list_p)
@@ -87,6 +95,7 @@ int dc_cfg_func(int arg)
         }
         node_list_p = node_list_p->next;
     }
+    drvFPGA_Close(&fd);
 
     memset(&snd_msg, 0, sizeof(snd_msg));
     snd_msg.mtype = MMSG_DC_RET;
@@ -101,6 +110,7 @@ int dc_cfg_func(int arg)
         node_list_p = node_list_p->next;
     }
 */
+func_exit:
     //free mem
     while(1)
     {
@@ -117,7 +127,6 @@ int dc_cfg_func(int arg)
         }
     }
 
-func_exit:
     return rval;
 }
 

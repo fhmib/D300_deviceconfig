@@ -3,6 +3,9 @@
 
 extern trans_data data_msg[];
 extern int data_msg_cnt;
+extern MADR sa;
+
+void *g_FPGA_pntr;
 
 /*
  * function:
@@ -129,7 +132,7 @@ int dc_cfg_nodename(void* arg, int mode)
     int rval = 0;
     FILE *fp = NULL;
     char line[512];
-    char value[64];
+    char value[68];
     int len, i;
 
     if(0 == mode){
@@ -148,40 +151,38 @@ int dc_cfg_nodename(void* arg, int mode)
             if(NULL == fgets(line, sizeof(line), fp)){
                 continue;
             }
-            if(NULL == strstr(line, "NodeName=")){
+            pos = strstr(line, "NodeName=");
+            if(NULL == pos){
                 continue;
             }
-            pos = line;
-            while(1){
-                if('=' == *pos){
-                    pos++;
-                    break;
-                }
-                else{
-                    pos++;
-                    continue;
-                }
-            }
-            strncpy(value, pos, 64);
+            pos += strlen("NodeName=");
+            strcpy(value, pos);
             len = strlen(value);
-            if(len >= 64 || len <= 0){
-                EPT(stderr, "%s:wrong name\n", __func__);
+            if(len >= 68 || len <= 0){
+                EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
                 rval = 2;
                 fclose(fp);
                 fp = NULL;
                 goto func_exit;
             }
-            while(' ' == value[0]){
+            while(' ' == value[0] && 2 <= len){
                 strcpy(value, value+1);
                 len--;
             }
-            while((' ' == value[len-1]) || ('\n' == value[len-1])){
+            while((' ' == value[len-1] || '\n' == value[len-1]) && 2 <= len){
                 value[len-1] = 0;
                 len--;
             }
+            if(strlen(value) > 64 || strlen(value) <= 0){
+                EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                rval = 2;
+                fclose(fp);
+                fp = NULL;
+                goto func_exit;
+            }
             for(i = 0; i < data_msg_cnt; i++){
                 if(0 == strcmp(data_msg[i].name, DNAME_NDNAME)){
-                    memset(data_msg[i].pvalue, 0, 2);
+                    memset(data_msg[i].pvalue, 0, 64);
                     strcpy(data_msg[i].pvalue, value);
                     fclose(fp);
                     fp = NULL;
@@ -192,7 +193,518 @@ int dc_cfg_nodename(void* arg, int mode)
             }
         }
     }
+    else{
+        int size;
+        char *p_value = (char*)arg;
+        char devinfo_path[] = DEVINFO_FILE;
+        char *buf;
+        char *pos;
+        
+        len = strlen(p_value);
+        if(len <= 0 || len >= 64){
+            EPT(stderr, "%s:wrong parameter:arg = [%s]", __func__, p_value);
+            rval = 3;
+            goto func_exit;
+        }
+        size = file_size(devinfo_path);
+        buf = (char*)malloc(sizeof(char)*(size+2));
+        memset(buf, 0, sizeof(char)*(size+2));
+        fp = fopen(DEVINFO_FILE, "r");
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp)){
+                continue;
+            }
+            if('#' == line[0] || ('/' == line[0] && '/' == line [1])){
+                strcat(buf, line);
+                continue;
+            }
+            pos = strstr(line, "NodeName=");
+            if(NULL == pos){
+                strcat(buf, line);
+                continue;
+            }
+            pos += strlen("NodeName=");
+            strcpy(pos, p_value);
+            pos += len;
+            *pos++ = '\n';
+            *pos = 0;
+            strcat(buf, line);
+        }
+        //EPT(stderr, "*****************buf****************\n");
+        //EPT(stderr, "%s\n", buf);
+        //EPT(stderr, "*****************buf****************\n");
+        fclose(fp);
+        fp = fopen(DEVINFO_FILE, "w");
+        fprintf(fp, "%s", buf);
+
+        free(buf);
+        fclose(fp);
+        fp = NULL;
+    }
 
 func_exit:
     return rval;
+}
+
+int dc_cfg_freq(void *arg, int mode)
+{
+    if(0 == mode){
+        int i;
+
+        int reg_271 = ad9361_read_bb(AD9361_BASE_ADDR + (0x271<<2));
+        int reg_272 = ad9361_read_bb(AD9361_BASE_ADDR + (0x272<<2));
+        int reg_273 = ad9361_read_bb(AD9361_BASE_ADDR + (0x273<<2));
+        int reg_274 = ad9361_read_bb(AD9361_BASE_ADDR + (0x274<<2));
+        int reg_275 = ad9361_read_bb(AD9361_BASE_ADDR + (0x275<<2));
+
+        int tx_int = ((reg_272 & 0x7) << 8) + reg_271;
+        int tx_frac = ((reg_275 & 0x7f) << 16) + (reg_274 << 8) + reg_273;
+
+        const double F_ref = 25.0/2;
+        double tx_freq = ((double)tx_frac/8388593 + tx_int) * F_ref;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_FREQ)){
+                memset(data_msg[i].pvalue, 0, 16);
+                sprintf(data_msg[i].pvalue, "%d", (int)(tx_freq+0.5));
+                goto func_exit;
+            }
+        }
+    }
+    else{
+        int freq = *(int*)arg;
+        EPT(stderr, "%s:can not config Frequency:%dMhz", __func__, freq);
+        goto func_exit;
+    }
+func_exit:
+    return 0;
+}
+
+int dc_cfg_tx1(void *arg, int mode)
+{
+    int rd_data = 0;
+
+    if(mode == 0){
+        int i;
+        
+        rd_data = ad9361_read(0x73);
+        EPT(stderr, "%s:rd_data = %d\n", __func__, rd_data);
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_TX1)){
+                    memset(data_msg[i].pvalue, 0, 4);
+                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    goto func_exit;
+            }
+        }
+    }
+    else{
+        rd_data = atoi((char*)arg);
+        rd_data = 4 * rd_data;
+        ad9361_write(0x73, rd_data);
+    }
+
+func_exit:
+    return 0;
+}
+
+
+int dc_cfg_tx2(void *arg, int mode)
+{
+    int rd_data = 0;
+
+    if(mode == 0){
+        int i;
+        
+        rd_data = ad9361_read(0x75);
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_TX2)){
+                    memset(data_msg[i].pvalue, 0, 4);
+                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    goto func_exit;
+            }
+        }
+    }
+    else{
+        rd_data = atoi((char*)arg);
+        rd_data = 4 * rd_data;
+        ad9361_write(0x75, rd_data);
+    }
+
+func_exit:
+    return 0;
+}
+
+int dc_cfg_ipaddr(void *arg, int mode)
+{
+    char ipaddr[16];
+    //int i;
+
+    if(0 == mode){
+        memset(ipaddr, 0, sizeof(ipaddr));
+        //maybe need more code
+        EPT(stderr, "I'm in function %s, and I will do nothing\n", __func__);
+        goto func_exit;
+    }
+    else{
+        memset(ipaddr, 0, sizeof(ipaddr));
+        strcpy(ipaddr, (char*)arg);
+        EPT(stderr, "%s:can not config ipaddr:%s", __func__, ipaddr);
+        //maybe need more code
+        goto func_exit;
+    }
+
+func_exit:
+    return 0;
+}
+
+int dc_cfg_ipmask(void *arg, int mode)
+{
+    char ipmask[16];
+    //int i;
+
+    if(0 == mode){
+        memset(ipmask, 0, sizeof(ipmask));
+        //maybe need more code
+        EPT(stderr, "I'm in function %s, and I will do nothing\n", __func__);
+        goto func_exit;
+    }
+    else{
+        memset(ipmask, 0, sizeof(ipmask));
+        strcpy(ipmask, (char*)arg);
+        EPT(stderr, "%s:can not config ipmask:%s\n", __func__, ipmask);
+        //maybe need more code
+        goto func_exit;
+    }
+
+func_exit:
+    return 0;
+}
+
+int dc_cfg_ipgate(void *arg, int mode)
+{
+    char ipgate[16];
+    //int i;
+
+    if(0 == mode){
+        memset(ipgate, 0, sizeof(ipgate));
+        //maybe need more code
+        EPT(stderr, "I'm in function %s, and I will do nothing\n", __func__);
+        goto func_exit;
+    }
+    else{
+        memset(ipgate, 0, sizeof(ipgate));
+        strcpy(ipgate, (char*)arg);
+        EPT(stderr, "%s:can not config ipgate:%s\n", __func__, ipgate);
+        //maybe need more code
+        goto func_exit;
+    }
+
+func_exit:
+    return 0;
+}
+
+int dc_cfg_rtc(void* arg, int mode)
+{
+    int rval = 0;
+    FILE *fp = NULL;
+    char line[512];
+    char value;
+    int i;
+
+    if(0 == mode){
+        fp = fopen(DEVINFO_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "RTC="))
+                continue;
+
+            sscanf(line, "%*[^0-9]%c", &value);
+            //EPT(stderr, "%s:value[%s]\n", __func__, value);
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_RTC)){
+                    memset(data_msg[i].pvalue, 0, 1);
+                    sprintf(data_msg[i].pvalue, "%c", value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        value = *(char*)arg;
+        EPT(stderr, "%s:can not config RTC\n", __func__);
+        //maybe need more code
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_btyvol(void* arg, int mode)
+{
+    int rval = 0;
+    FILE *fp = NULL;
+    char value[16];
+    int i, len;
+
+    if(0 == mode){
+        char line[512];
+        fp = fopen(DEVINFO_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "BTYVOL="))
+                continue;
+
+            sscanf(line, "%*[^0-9]%[0-9]", value);
+            //EPT(stderr, "%s:value[%s]\n", __func__, value);
+            len = strlen(value);
+            if(0 == len || 16 <= len){
+                EPT(stderr, "%s:get bettry vol fail\n", __func__);
+                rval = 2;
+                fclose(fp);
+                fp = NULL;
+                goto func_exit;
+            }
+            if(2 <= len && value[0] == '0'){
+                for(i = 0; i < len-1; i++){
+                    value[i] = value[i+1];
+                }
+                value[i] = 0;
+                len--;
+            }
+            if(strlen(value) > 8 || strlen(value) <= 0){
+                EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                rval = 2;
+                fclose(fp);
+                fp = NULL;
+                goto func_exit;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_BTYVOL)){
+                    memset(data_msg[i].pvalue, 0, 8);
+                    sprintf(data_msg[i].pvalue, "%s", value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config BTYVOL\n", __func__);
+        //maybe need more code
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_btytype(void *arg, int mode)
+{
+    int rval = 0;
+    int i;
+    FILE *fp;
+    char value[16];
+
+    if(mode == 0){
+        char line[512];
+        char *pos;
+        int len;
+        fp = fopen(DEVINFO_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            pos = strstr(line, "BTYTYPE=");
+            if(NULL == pos)
+                continue;
+            pos += strlen("BTYTYPE=");
+            strcpy(value, pos);
+            len = strlen(value);
+            if(len >= 16 || len <= 0){
+                EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                rval = 2;
+                fclose(fp);
+                fp = NULL;
+                goto func_exit;
+            }
+            while(' ' == value[0] && 2 <= len){
+                strcpy(value, value+1);
+                len--;
+            }
+            while((' ' == value[len-1] || '\n' == value[len-1]) && 2 <= len){
+                value[len-1] = 0;
+                len--;
+            }
+            if(strlen(value) > 8 || strlen(value) <= 0){
+                EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                rval = 2;
+                fclose(fp);
+                fp = NULL;
+                goto func_exit;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_BTYTYPE)){
+                    memset(data_msg[i].pvalue, 0, 8);
+                    strcpy(data_msg[i].pvalue, value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config BTYTYPE\n", __func__);
+        //maybe need more code
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int ad9361_read_bb(int addr)
+{
+    int rd_data = 0;
+    int i = 0;
+
+    rd_data = drvFPGA_Read(addr);
+    for(i = 1; i < 100; i++){
+        rd_data = drvFPGA_Read(ADDR_9361_SPI_BUSY);
+        if(!(rd_data & 0x100)) break;
+    }
+    EPT(stderr, "%s:addr:%d rd_data:%d\n", __func__, addr, rd_data);
+    return (rd_data & 0xFF);
+}
+
+int ad9361_write_bb(int addr, int data)
+{
+    int rd_data = 0;
+    int i = 0;
+
+    for(i = 1; i < 100; i++){
+        rd_data = drvFPGA_Read(ADDR_9361_SPI_BUSY);
+        if(!(rd_data & 0x100)) break;
+    }
+    drvFPGA_Write(addr, (data & 0xFF));
+
+    return 0;
+}
+
+int ad9361_read(int addr)
+{
+    int rd_data = 0;
+    int i = 0;
+
+    rd_data = drvFPGA_Read(AD9361_BASE_ADDR + (addr<<2));
+    for(i = 1; i < 100; i++){
+        rd_data = drvFPGA_Read(ADDR_9361_SPI_BUSY);
+        if(!(rd_data & 0x100)) break;
+    }
+    EPT(stderr, "%s:addr:%d rd_data:%d\n", __func__, addr, rd_data);
+    return (rd_data & 0xFF);
+}
+
+int ad9361_write(int addr, int data)
+{
+    int rd_data = 0;
+    int i = 0;
+
+    for(i = 1; i < 100; i++){
+        rd_data = drvFPGA_Read(ADDR_9361_SPI_BUSY);
+        if(!(rd_data & 0x100)) break;
+    }
+    drvFPGA_Write(AD9361_BASE_ADDR + (addr<<2), (data & 0xFF));
+
+    return 0;
+}
+
+int drvFPGA_Read(int io_addr)
+{
+    int io_data = 0;
+
+    io_data = _FPGA_IO_(io_addr);
+    EPT(stderr, "%s:io_addr:0x%x io_data:%d\n", __func__, io_addr, io_data);
+
+    return io_data;
+}
+
+int drvFPGA_Write(int io_addr, int io_data)
+{
+    _FPGA_IO_(io_addr) = io_data;
+
+    return 0;
+}
+
+int drvFPGA_Init(int *p_fd)
+{
+    int fd = 0;
+
+    fd = open(DEVNAME, O_RDWR | O_SYNC);
+    if(fd < 0){
+        EPT(stderr, "%s:can not open /dev/mem\n", __func__);
+        return 1;
+    }
+
+
+    g_FPGA_pntr = mmap(0, 65536, PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, fd, FPGA_ADDR_BASE);
+    if(g_FPGA_pntr == NULL){
+        EPT(stderr, "%s,%d:can not open mmap\n", __func__, __LINE__);
+        close(fd);
+        return 2;
+    }
+    else if(g_FPGA_pntr == (void*)-1){
+        EPT(stderr, "%s,%d:can not open mmap\n", __func__, __LINE__);
+        close(fd);
+        return 3;
+    }
+    
+    *p_fd = fd;
+    return 0;
+}
+
+int drvFPGA_Close(int *p_fd)
+{
+    int fd = *p_fd;
+
+    close(fd);
+    munmap(g_FPGA_pntr, 65536);
+    *p_fd = 0;
+    g_FPGA_pntr = NULL;
+
+    return 0;
 }

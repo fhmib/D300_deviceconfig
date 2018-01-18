@@ -1,4 +1,5 @@
 #include "dc_common.h"
+#include "dc_monitor.h"
 
 //extern device_info_t *dc_info;
 extern MADR sa;
@@ -75,6 +76,8 @@ int dc_read_2boa(void* arg, int length)
     //update device_info;
     rval = write_data_msg();
     
+    EPT(stderr, "%s,%d:I'm here\n", __func__, __LINE__);
+
     //put data to snd_msg.data
     rval = add_data(snd_msg.data, MAX_MSG_BUF);
     //EPT(stderr, "\nI'm in %s,%d,sending data content:", __func__, __LINE__);
@@ -112,12 +115,14 @@ int dc_write_cfg(void* arg, int length)
     //char name_tmp[64];
     char string[256];
     
+    //EPT(stderr, "%s:I'm in dc_write_cfg funcion\n",__func__);
     if(length <= 0){
         EPT(stderr, "%s:receive msg with wrong format\n",__func__);
         rval = 1;
         goto func_exit;
     }
     buf = (char*)arg;
+    EPT(stderr, "%s:str from web :[%s]\n", __func__, buf);
 
     pthread_mutex_lock(&dc_share.mutex);
 
@@ -235,12 +240,12 @@ int dc_write_cfg(void* arg, int length)
     if(data_cfg_cnt > 0){
         cfg_flag++;
     }
-    /*
+    
     for(pos1 = 0; pos1 < data_cfg_cnt; pos1++)
     {
         EPT(stderr, "%s %s\n", data_cfg[pos1].name, data_cfg[pos1].value);
     }
-    */
+    
     pthread_mutex_unlock(&dc_share.mutex);
 
 func_exit:
@@ -258,7 +263,13 @@ int write_data_msg()
 {
     int i;
     int rval = 0;
+    int fd;
     
+    rval = drvFPGA_Init(&fd);
+    if(rval){
+        EPT(stderr, "%s:initialize drvFPGA failed\n", __func__);
+        goto func_exit;
+    }
     for(i = 0; i < data_msg_cnt; i++){
         //EPT(stderr, "%s:data_msg[%d].enable=%d\n", __func__, i, data_msg[i].enable);
         if(data_msg[i].enable == 0){
@@ -266,10 +277,11 @@ int write_data_msg()
         }
         rval = data_msg[i].opera(data_msg[i].pvalue, 0);
         if(0 != rval){
-            EPT(stderr, "%s:read parameter from device failed!\n", __func__);
-            goto func_exit;
+            EPT(stderr, "%s:read %s from device failed!\n", __func__, data_msg[i].name);
+            data_msg[i].enable = 0;
         }
     }
+    drvFPGA_Close(&fd);
 
 func_exit:
     return rval;
@@ -344,19 +356,10 @@ void write_data_for_test()
         data_msg[i].enable = 1;
     }
     */
-    strcpy(data_msg[0].pvalue, "3");
-    strcpy(data_msg[1].pvalue, "RZXT_NODE[3]");
-    strcpy(data_msg[2].pvalue, "2155.5");
-    strcpy(data_msg[3].pvalue, "2.5");
-    strcpy(data_msg[4].pvalue, "ab12");
-    strcpy(data_msg[5].pvalue, "1122");
+    strcpy(data_msg[5].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
     strcpy(data_msg[6].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
-    strcpy(data_msg[7].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
-    strcpy(data_msg[8].pvalue, "192.168.3.240");
-    strcpy(data_msg[9].pvalue, "255.255.255.0");
-    strcpy(data_msg[10].pvalue, "192.168.3.1");
-    strcpy(data_msg[11].pvalue, "1");
-    strcpy(data_msg[12].pvalue, "123.4");
-    strcpy(data_msg[13].pvalue, "215");
+    sprintf(data_msg[7].pvalue, "192.168.%d.240", sa);
+    strcpy(data_msg[8].pvalue, "255.255.255.0");
+    sprintf(data_msg[9].pvalue, "192.168.%d.1", sa);
     return;
 }

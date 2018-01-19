@@ -7,6 +7,516 @@ extern MADR sa;
 
 void *g_FPGA_pntr;
 
+int dc_cfg_hmver(void *arg, int mode)
+{
+    int rval = 0;
+    FILE *fp;
+    char value[64];
+    char line[512];
+    int len, i;
+    char *pos;
+
+    if(mode == 0){
+        fp = fopen(CONFIG_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "highmac"))
+                continue;
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
+
+            pos = strstr(line, "./");
+            pos += strlen("./");
+            i = 0;
+            while(1){
+                if(' ' == *pos)
+                    break;
+                if(i >= 64){
+                    EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                    rval = 2;
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                value[i++] = *pos++;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_HMVER)){
+                    memset(data_msg[i].pvalue, 0, 64);
+                    strcpy(data_msg[i].pvalue, value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        len = strlen((char*)arg);
+        if(len < 1 || len > 64){
+            EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+            rval = 3;
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+
+        rval = mod_infile(CONFIG_FILE, "highmac", "./", " ", value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_nlver(void *arg, int mode)
+{
+    int rval = 0;
+    FILE *fp;
+    char value[64];
+    char line[512];
+    int len, i;
+    char *pos;
+
+    if(mode == 0){
+        fp = fopen(CONFIG_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "netlayer"))
+                continue;
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
+
+            pos = strstr(line, "./");
+            pos += strlen("./");
+            i = 0;
+            while(1){
+                if(' ' == *pos)
+                    break;
+                if(i >= 64){
+                    EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                    rval = 2;
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                value[i++] = *pos++;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_NLVER)){
+                    memset(data_msg[i].pvalue, 0, 64);
+                    strcpy(data_msg[i].pvalue, value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        len = strlen((char*)arg);
+        if(len < 1 || len > 64){
+            EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+            rval = 3;
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+
+        rval = mod_infile(CONFIG_FILE, "netlayer", "./", " ", value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_rtver(void *arg, int mode)
+{
+    int rval = 0;
+    FILE *fp;
+    char value[64];
+    char line[512];
+    int len, i;
+    char *pos;
+
+    if(mode == 0){
+        fp = fopen(CONFIG_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "routingp"))
+                continue;
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
+
+            pos = strstr(line, "./");
+            pos += strlen("./");
+            i = 0;
+            while(1){
+                if(' ' == *pos)
+                    break;
+                if(i >= 64){
+                    EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                    rval = 2;
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                value[i++] = *pos++;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_RTVER)){
+                    memset(data_msg[i].pvalue, 0, 64);
+                    strcpy(data_msg[i].pvalue, value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        len = strlen((char*)arg);
+        if(len < 1 || len > 64){
+            EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+            rval = 3;
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+
+        rval = mod_infile(CONFIG_FILE, "routingp", "./", " ", value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_ipver(void *arg, int mode)
+{
+    int rval = 0;
+    FILE *fp;
+    char value[64];
+    char line[512];
+    int len, i;
+    char *pos;
+
+    if(mode == 0){
+        fp = fopen(CONFIG_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "if2tcpip"))
+                continue;
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
+
+            pos = strstr(line, "./");
+            pos += strlen("./");
+            i = 0;
+            while(1){
+                if(' ' == *pos)
+                    break;
+                if(i >= 64){
+                    EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                    rval = 2;
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                value[i++] = *pos++;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_IPVER)){
+                    memset(data_msg[i].pvalue, 0, 64);
+                    strcpy(data_msg[i].pvalue, value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        len = strlen((char*)arg);
+        if(len < 1 || len > 64){
+            EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+            rval = 3;
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+
+        rval = mod_infile(CONFIG_FILE, "if2tcpip", "./", " ", value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_dcver(void *arg, int mode)
+{
+    int rval = 0;
+    FILE *fp;
+    char value[64];
+    char line[512];
+    int len, i;
+    char *pos;
+
+    if(mode == 0){
+        fp = fopen(CONFIG_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "devcfg"))
+                continue;
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
+
+            pos = strstr(line, "./");
+            pos += strlen("./");
+            i = 0;
+            while(1){
+                if(' ' == *pos)
+                    break;
+                if(i >= 64){
+                    EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                    rval = 2;
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                value[i++] = *pos++;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_DCVER)){
+                    memset(data_msg[i].pvalue, 0, 64);
+                    strcpy(data_msg[i].pvalue, value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        len = strlen((char*)arg);
+        if(len < 1 || len > 64){
+            EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+            rval = 3;
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+
+        rval = mod_infile(CONFIG_FILE, "devcfg", "./", " ", value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_fpgaver(void *arg, int mode)
+{
+    int rval = 0;
+    FILE *fp;
+    char value[64];
+    char line[512];
+    int len, i;
+    char *pos;
+
+    if(mode == 0){
+        fp = fopen(FPGA_FILE, "r");
+        if(NULL == fp){
+            rval = 1;
+            EPT(stderr, "%s:can not open config file\n", __func__);
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        while(!feof(fp)){
+            memset(line, 0, sizeof(line));
+            if(NULL == fgets(line, sizeof(line), fp))
+                continue;
+            if(NULL == strstr(line, "FPGANAME"))
+                continue;
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
+
+            pos = strstr(line, "FPGANAME=\"");
+            pos += strlen("FPGANAME=\"");
+            i = 0;
+            while(1){
+                if('\"' == *pos)
+                    break;
+                if(i >= 64){
+                    EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+                    rval = 2;
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                value[i++] = *pos++;
+            }
+            for(i = 0; i < data_msg_cnt; i++){
+                if(0 == strcmp(data_msg[i].name, DNAME_FPGAVER)){
+                    memset(data_msg[i].pvalue, 0, 64);
+                    strcpy(data_msg[i].pvalue, value);
+                    fclose(fp);
+                    fp = NULL;
+                    goto func_exit;
+                }
+                else
+                    continue;
+            }
+        }
+    }
+    else{
+        len = strlen((char*)arg);
+        if(len < 1 || len > 64){
+            EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
+            rval = 3;
+            goto func_exit;
+        }
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+
+        rval = mod_infile(FPGA_FILE, NULL, "FPGANAME=\"", "\"", value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
 /*
  * function:
  *      read/write node id
@@ -38,14 +548,24 @@ int dc_cfg_nodeid(void* arg, int mode)
             EPT(stderr, "%s:can not open config file\n", __func__);
             goto func_exit;
         }
+        memset(value, 0, sizeof(value));
         while(!feof(fp)){
             memset(line, 0, sizeof(line));
-            memset(value, 0, sizeof(value));
             if(NULL == fgets(line, sizeof(line), fp))
                 continue;
             if(NULL == strstr(line, "node_id="))
                 continue;
 
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
             sscanf(line, "%*[^0-9]%[0-9]", value);
             //EPT(stderr, "%s:value[%s]\n", __func__, value);
             len = strlen(value);
@@ -95,15 +615,25 @@ int dc_cfg_nodeid(void* arg, int mode)
             if(NULL == fgets(line, sizeof(line), fp)){
                 continue;
             }
-            if(line[0] == '#'){
-                strcat(buf, line);
-                continue;
-            }
             pos = strstr(line, "node_id=");
             if(NULL == pos){
                 strcat(buf, line);
                 continue;
             }
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#'){
+                strcat(buf, line);
+                continue;
+            }
+
             pos += strlen("node_id=");
             strcpy(pos, p_value);
             pos += strlen(p_value);
@@ -155,6 +685,18 @@ int dc_cfg_nodename(void* arg, int mode)
             if(NULL == pos){
                 continue;
             }
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if(line[i] == '#')
+                continue;
+
             pos += strlen("NodeName=");
             strcpy(value, pos);
             len = strlen(value);
@@ -215,7 +757,16 @@ int dc_cfg_nodename(void* arg, int mode)
             if(NULL == fgets(line, sizeof(line), fp)){
                 continue;
             }
-            if('#' == line[0] || ('/' == line[0] && '/' == line [1])){
+
+            //jump after ' '
+            len = strlen(line);
+            for(i = 0; i < len; i++){
+                if(line[i] == ' ')
+                    continue;
+                else
+                    break;
+            }
+            if('#' == line[i] || ('/' == line[i] && '/' == line [i+1])){
                 strcat(buf, line);
                 continue;
             }
@@ -226,7 +777,7 @@ int dc_cfg_nodename(void* arg, int mode)
             }
             pos += strlen("NodeName=");
             strcpy(pos, p_value);
-            pos += len;
+            pos += strlen(p_value);
             *pos++ = '\n';
             *pos = 0;
             strcat(buf, line);
@@ -338,13 +889,16 @@ func_exit:
 int dc_cfg_ipaddr(void *arg, int mode)
 {
     char ipaddr[16];
-    //int i;
+    int i;
 
     if(0 == mode){
-        memset(ipaddr, 0, sizeof(ipaddr));
-        //maybe need more code
-        EPT(stderr, "I'm in function %s, and I will do nothing\n", __func__);
-        goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_IPADDR)){
+                memset(data_msg[i].pvalue, 0, 16);
+                sprintf(data_msg[i].pvalue, "192.168.%d.240", sa);
+                goto func_exit;
+            }
+        }
     }
     else{
         memset(ipaddr, 0, sizeof(ipaddr));
@@ -361,13 +915,16 @@ func_exit:
 int dc_cfg_ipmask(void *arg, int mode)
 {
     char ipmask[16];
-    //int i;
+    int i;
 
     if(0 == mode){
-        memset(ipmask, 0, sizeof(ipmask));
-        //maybe need more code
-        EPT(stderr, "I'm in function %s, and I will do nothing\n", __func__);
-        goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_IPMASK)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, "255.255.255.0");
+                goto func_exit;
+            }
+        }
     }
     else{
         memset(ipmask, 0, sizeof(ipmask));
@@ -384,13 +941,16 @@ func_exit:
 int dc_cfg_ipgate(void *arg, int mode)
 {
     char ipgate[16];
-    //int i;
+    int i;
 
     if(0 == mode){
-        memset(ipgate, 0, sizeof(ipgate));
-        //maybe need more code
-        EPT(stderr, "I'm in function %s, and I will do nothing\n", __func__);
-        goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_IPGATE)){
+                memset(data_msg[i].pvalue, 0, 16);
+                sprintf(data_msg[i].pvalue, "192.168.%d.1", sa);
+                goto func_exit;
+            }
+        }
     }
     else{
         memset(ipgate, 0, sizeof(ipgate));
@@ -594,6 +1154,187 @@ int dc_cfg_btytype(void *arg, int mode)
     }
 
 func_exit:
+    return rval;
+}
+
+
+/*
+ * function:
+ *      according to some keywords, modify a string within an appointed file.
+ *      automatic ignore the line heads of '#' or '//'.
+ * parameters:
+ *      file_path:          path of the file, can not be NULL.
+ *      p_kw:               point to a string stores msg which indicates the line will be modified.
+ *      p_head:             point to a string stores msg before the string you want to modify, such as "name=" or "id:".
+ *      p_end:              point to a string stores msg after the string you want to modify, such as " " or "\n". defalut "\n".
+ *      p_str:              point to a string stores msg you want to add.
+ * return:
+ *      0:                  success
+ *      other:              failure
+ */
+int mod_infile(const char *file_path, const char *p_kw, const char *p_head, const char *p_end, const char *p_str)
+{
+    //declare and initialze variables
+    int rval = 0;
+    int len = 0;
+    int size = 0;
+    int i;
+    char line[1024];
+    char *pos_h, *pos_e;
+    char *file_tmp = NULL;
+    char *line_tmp = NULL;
+    FILE *fp = NULL;
+    char *pkw = NULL;
+    char *ph = NULL;
+    char *pe = NULL;
+    char *str = NULL;
+
+    //check and save parameters
+    if(file_path == NULL || p_head == NULL || p_str == NULL){
+        rval = 1;
+        goto func_exit;
+    }
+
+    len = strlen(p_head);
+    if(len <= 0){
+        rval = 2;
+        goto func_exit;
+    }
+    ph = (char*)malloc(len+1);
+    strcpy(ph, p_head);
+
+    if(p_kw == NULL) pkw = ph;
+    else{
+        len = strlen(p_kw);
+        if(len <= 0){
+            rval = 3;
+            goto func_exit;
+        }
+        pkw = (char*)malloc(len+1);
+        strcpy(pkw, p_kw);
+    }
+
+    if(p_end == NULL){
+        pe = (char*)malloc(2);
+        *pe = '\n';
+        *(pe+1) = 0;
+    }
+    else{
+        len = strlen(p_end);
+        if(len <= 0){
+            rval = 4;
+            goto func_exit;
+        }
+        pe = (char*)malloc(len+1);
+        strcpy(pe, p_end);
+    }
+
+    len = strlen(p_str);
+    if(len <= 0){
+        rval = 5;
+        goto func_exit;
+    }
+    str = (char*)malloc(len+1);
+    strcpy(str, p_str);
+
+    size = file_size(file_path);
+    len = size + strlen(p_str) + 1;
+    file_tmp = (char*)malloc(len);
+    memset(file_tmp, 0, len);
+
+    //open file
+    fp = fopen(file_path, "r");
+    if(fp == NULL){
+        rval = 6;
+        goto func_exit;
+    }
+
+    //read file and insert string
+    while(!feof(fp)){
+        memset(line, 0, sizeof(line));
+        if(NULL == fgets(line, sizeof(line), fp)){
+            continue;
+        }
+        if(NULL == strstr(line, pkw)){
+            strcat(file_tmp, line);
+            continue;
+        }
+
+        len = strlen(line);
+        for(i = 0; i < len; i++){
+            if(' ' == line[i]) continue;
+            else break;
+        }
+        if('#' == line[i] || ('/' == line[i] && '/' == line[i+1])){
+            strcat(file_tmp, line);
+            continue;
+        }
+
+        pos_h = strstr(line, ph);
+        if(NULL == pos_h){
+            rval = 7;
+            goto func_exit;
+        }
+        pos_h += strlen(ph);
+        pos_e = strstr(pos_h, pe);
+        if(NULL == pos_e){
+            rval = 8;
+            goto func_exit;
+        }
+        len = strlen(pos_e) + 1;
+        line_tmp = (char*)malloc(len);
+        strcpy(line_tmp, pos_e);
+        len = strlen(pos_h);
+        memset(pos_h, 0, len);
+        strcat(pos_h, str);
+        pos_h += strlen(str);
+        strcat(pos_h, line_tmp);
+
+        free(line_tmp);
+        line_tmp = NULL;
+
+        strcat(file_tmp, line);
+    }
+
+    //write file
+    fclose(fp);
+    fp = fopen(file_path, "w");
+    fprintf(fp, "%s", file_tmp);
+    fclose(fp);
+    fp = NULL;
+
+func_exit:
+    if(line_tmp != NULL){
+        free(line_tmp);
+        line_tmp = NULL;
+    }
+    if(file_tmp != NULL){
+        free(file_tmp);
+        file_tmp = NULL;
+    }
+    if(pkw != NULL){
+        if(pkw == ph) pkw = NULL;
+        else{
+            free(pkw);
+            pkw = NULL;
+        }
+    }
+    if(ph != NULL){
+        free(ph);
+        ph = NULL;
+    }
+    if(pe != NULL){
+        free(pe);
+        pe = NULL;
+    }
+    if(str != NULL){
+        free(str);
+        str = NULL;
+    }
+    if(fp != NULL){
+        fclose(fp);
+        fp = NULL;
+    }
     return rval;
 }
 

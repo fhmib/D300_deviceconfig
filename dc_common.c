@@ -205,7 +205,7 @@ func_exit:
  * return:
  *      file length
  */
-int file_size(char* filename)
+int file_size(const char* filename)
 {
     struct stat statbuf;
     int size;

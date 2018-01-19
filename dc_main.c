@@ -11,13 +11,19 @@ extern dc_tshare_t dc_share;
 int read_first;             //the variable must be set 1 before config.
 trans_data data_msg[] =
 {
+    {DNAME_FPGAVER, 0, 1, NULL, dc_cfg_fpgaver},
+    {DNAME_HMVER, 0, 1, NULL, dc_cfg_hmver},
+    {DNAME_NLVER, 0, 1, NULL, dc_cfg_nlver},
+    {DNAME_RTVER, 0, 1, NULL, dc_cfg_rtver},
+    {DNAME_IPVER, 0, 1, NULL, dc_cfg_ipver},
+    {DNAME_DCVER, 0, 1, NULL, dc_cfg_dcver},
     {DNAME_NDID, 0, 0, NULL, dc_cfg_nodeid},
     {DNAME_NDNAME, 0, 1, NULL, dc_cfg_nodename},
     {DNAME_FREQ, 0, 0, NULL, dc_cfg_freq},
     {DNAME_TX1, 0, 0, NULL, dc_cfg_tx1},
     {DNAME_TX2, 0, 0, NULL, dc_cfg_tx2},
-    {DNAME_RSAN0, 0, 0, NULL, NULL},
-    {DNAME_RSAN1, 0, 0, NULL, NULL},
+    //{DNAME_RSAN0, 0, 0, NULL, NULL},
+    //{DNAME_RSAN1, 0, 0, NULL, NULL},
     {DNAME_IPADDR, 0, 1, NULL, dc_cfg_ipaddr},
     {DNAME_IPMASK, 0, 1, NULL, dc_cfg_ipmask},
     {DNAME_IPGATE, 0, 1, NULL, dc_cfg_ipgate},
@@ -216,7 +222,7 @@ int dc_init()
 
     dc_msg_malloc();
     //for test
-    write_data_for_test();
+    //write_data_for_test();
 /*
     key = ftok(PATH_CREAT_KEY, SN_DC_THREAD);
     dt_qid = msgget(key, IPC_CREAT | QUEUE_MODE);
@@ -238,6 +244,36 @@ void dc_msg_malloc()
     len = 0;
     for(i = 0; i < data_msg_cnt; i++)
     {
+        if(0 == strcmp(DNAME_HMVER, data_msg[i].name)){
+            len = 64;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        if(0 == strcmp(DNAME_NLVER, data_msg[i].name)){
+            len = 64;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        if(0 == strcmp(DNAME_RTVER, data_msg[i].name)){
+            len = 64;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        if(0 == strcmp(DNAME_IPVER, data_msg[i].name)){
+            len = 64;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        if(0 == strcmp(DNAME_DCVER, data_msg[i].name)){
+            len = 64;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        if(0 == strcmp(DNAME_FPGAVER, data_msg[i].name)){
+            len = 64;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
         if(0 == strcmp(DNAME_NDID, data_msg[i].name)){
             len = 2;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);

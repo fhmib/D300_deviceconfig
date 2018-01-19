@@ -37,6 +37,12 @@
 #define MAX_MSG_BUF         8192
 //#define SND_MSG_LEN         MAX_MSG_BUF-sizeof(long)
 
+#define DNAME_FPGAVER       "FPGAVersion"
+#define DNAME_HMVER         "HighMacVersion"
+#define DNAME_NLVER         "NetLayerVersion"
+#define DNAME_RTVER         "RoutingVersion"
+#define DNAME_IPVER         "If2TcpIpVersion"
+#define DNAME_DCVER         "DeviceConfigVersion"
 #define DNAME_NDID          "NodeId"
 #define DNAME_NDNAME        "NodeName"
 #define DNAME_FREQ          "CentreFreq"
@@ -185,7 +191,7 @@ void    write_data_for_test(void);
 int     dc_get_qids(void* arg);
 int     dc_queues_delete(void);
 int     dc_msg_send(int, void*, int);
-int     file_size(char*);
+int     file_size(const char*);
 //int dc_strstr(char* find, char* dest);
 
 int     dc_cfg_func(int);

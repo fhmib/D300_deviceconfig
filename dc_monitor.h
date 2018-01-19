@@ -3,6 +3,7 @@
 
 #define CONFIG_FILE             "./init.sh"
 #define DEVINFO_FILE            "./devinfo"
+#define FPGA_FILE               "./fpgadown.sh"
 
 #define DEVNAME                 "/dev/mem"
 #define FPGA_ADDR_BASE          0x42000000
@@ -13,6 +14,12 @@
 
 #define _FPGA_IO_(ZZ)           (*((int*)(g_FPGA_pntr+ZZ)))
 
+int dc_cfg_hmver(void*, int);
+int dc_cfg_nlver(void*, int);
+int dc_cfg_rtver(void*, int);
+int dc_cfg_ipver(void*, int);
+int dc_cfg_dcver(void*, int);
+int dc_cfg_fpgaver(void*, int);
 int dc_cfg_nodeid(void*, int);
 int dc_cfg_nodename(void*, int);
 int dc_cfg_freq(void*, int);
@@ -24,6 +31,8 @@ int dc_cfg_ipgate(void*, int);
 int dc_cfg_rtc(void*, int);
 int dc_cfg_btyvol(void*, int);
 int dc_cfg_btytype(void*, int);
+
+int mod_infile(const char*, const char*, const char*, const char*, const char*);
 
 int ad9361_read_bb(int);
 int ad9361_write_bb(int, int);

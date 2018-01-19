@@ -347,15 +347,14 @@ func_exit:
     return rval;
 }
 
+/*
 void write_data_for_test()
 {
-    /*
-    int i;
-    for(i = 0; i < data_cnt; i++)
-    {
-        data_msg[i].enable = 1;
-    }
-    */
+    //int i;
+    //for(i = 0; i < data_cnt; i++)
+    //{
+    //    data_msg[i].enable = 1;
+    //}
     strcpy(data_msg[5].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
     strcpy(data_msg[6].pvalue, "[12, 41, 43, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]");
     sprintf(data_msg[7].pvalue, "192.168.%d.240", sa);
@@ -363,3 +362,4 @@ void write_data_for_test()
     sprintf(data_msg[9].pvalue, "192.168.%d.1", sa);
     return;
 }
+*/

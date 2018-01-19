@@ -153,7 +153,7 @@ int update_data_msg(char* name, char* value)
                 goto func_exit;
             }
             else{
-                strcpy(data_msg[i].pvalue, value);
+                //strcpy(data_msg[i].pvalue, value);
                 rval = 0;
                 goto func_exit;
             }

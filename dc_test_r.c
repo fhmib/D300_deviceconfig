@@ -22,8 +22,8 @@ int main()
     test_msg_data.node = 3;
     test_len += sizeof(MADR);
     //strcpy(test_msg_data.data, "NodeId");
-    strcpy(test_msg_data.data, "NodeName NodeId IpAddress IpMask IpGateway TX1Power TX2Power HaveRTC BatteryVoltage BatteryType");
-    //strcpy(test_msg_data.data, "NodeName NodeId IpAddress IpMask IpGateway CentreFreq TX1Power TX2Power HaveRTC BatteryVoltage BatteryType");
+    strcpy(test_msg_data.data, "HighMacVersion FPGAVersion NetLayerVersion RoutingVersion If2TcpIpVersion DeviceConfigVersion NodeName NodeId");
+    strcat(test_msg_data.data, " NodeName NodeId IpAddress IpMask IpGateway CentreFreq TX1Power TX2Power HaveRTC BatteryVoltage BatteryType");
     test_len += strlen(test_msg_data.data);
 
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);

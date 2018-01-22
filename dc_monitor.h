@@ -14,6 +14,7 @@
 
 #define _FPGA_IO_(ZZ)           (*((int*)(g_FPGA_pntr+ZZ)))
 
+//config functions
 int dc_cfg_hmver(void*, int);
 int dc_cfg_nlver(void*, int);
 int dc_cfg_rtver(void*, int);
@@ -32,8 +33,12 @@ int dc_cfg_rtc(void*, int);
 int dc_cfg_btyvol(void*, int);
 int dc_cfg_btytype(void*, int);
 
+//common functions
 int mod_infile(const char*, const char*, const char*, const char*, const char*);
+int chk_num(char*);
+int update_data_msg(const char*, const char*);
 
+//bottom functions
 int ad9361_read_bb(int);
 int ad9361_write_bb(int, int);
 int ad9361_read(int);

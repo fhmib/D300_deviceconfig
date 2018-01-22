@@ -86,6 +86,8 @@ int dc_cfg_hmver(void *arg, int mode)
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
+
+        rval = update_data_msg(DNAME_HMVER, value);
     }
 
 func_exit:
@@ -171,6 +173,8 @@ int dc_cfg_nlver(void *arg, int mode)
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
+
+        rval = update_data_msg(DNAME_NLVER, value);
     }
 
 func_exit:
@@ -256,6 +260,8 @@ int dc_cfg_rtver(void *arg, int mode)
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
+
+        rval = update_data_msg(DNAME_RTVER, value);
     }
 
 func_exit:
@@ -341,6 +347,8 @@ int dc_cfg_ipver(void *arg, int mode)
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
+
+        rval = update_data_msg(DNAME_IPVER, value);
     }
 
 func_exit:
@@ -426,6 +434,8 @@ int dc_cfg_dcver(void *arg, int mode)
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
+
+        rval = update_data_msg(DNAME_DCVER, value);
     }
 
 func_exit:
@@ -511,6 +521,8 @@ int dc_cfg_fpgaver(void *arg, int mode)
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
+
+        rval = update_data_msg(DNAME_FPGAVER, value);
     }
 
 func_exit:
@@ -600,6 +612,8 @@ int dc_cfg_nodeid(void* arg, int mode)
         char* buf;
         char* pos;
 
+        rval = chk_num(p_value);
+        if(rval) goto func_exit;
         len = strlen(p_value);
         if(2 == len && *p_value == '0'){
             *p_value = *(p_value + 1);
@@ -651,6 +665,8 @@ int dc_cfg_nodeid(void* arg, int mode)
         free(buf);
         fclose(fp);
         fp = NULL;
+
+        rval = update_data_msg(DNAME_NDID, p_value);
     }
 
 func_exit:
@@ -792,6 +808,8 @@ int dc_cfg_nodename(void* arg, int mode)
         free(buf);
         fclose(fp);
         fp = NULL;
+
+        rval = update_data_msg(DNAME_NDNAME, p_value);
     }
 
 func_exit:
@@ -835,9 +853,10 @@ func_exit:
 int dc_cfg_tx1(void *arg, int mode)
 {
     int rd_data = 0;
+    int rval = 0;
+    int i;
 
     if(mode == 0){
-        int i;
         
         rd_data = ad9361_read(0x73);
         EPT(stderr, "%s:rd_data = %d\n", __func__, rd_data);
@@ -850,22 +869,33 @@ int dc_cfg_tx1(void *arg, int mode)
         }
     }
     else{
+        rval = chk_num((char*)arg);
+        if(rval) goto func_exit;
         rd_data = atoi((char*)arg);
         rd_data = 4 * rd_data;
         ad9361_write(0x73, rd_data);
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_TX1)){
+                    memset(data_msg[i].pvalue, 0, 4);
+                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    goto func_exit;
+            }
+        }
     }
 
 func_exit:
-    return 0;
+    return rval;
 }
 
 
 int dc_cfg_tx2(void *arg, int mode)
 {
     int rd_data = 0;
+    int rval = 0;
+    int i;
 
     if(mode == 0){
-        int i;
         
         rd_data = ad9361_read(0x75);
         for(i = 0; i < data_msg_cnt; i++){
@@ -877,13 +907,23 @@ int dc_cfg_tx2(void *arg, int mode)
         }
     }
     else{
+        rval = chk_num((char*)arg);
+        if(rval) goto func_exit;
         rd_data = atoi((char*)arg);
         rd_data = 4 * rd_data;
         ad9361_write(0x75, rd_data);
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_TX2)){
+                    memset(data_msg[i].pvalue, 0, 4);
+                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    goto func_exit;
+            }
+        }
     }
 
 func_exit:
-    return 0;
+    return rval;
 }
 
 int dc_cfg_ipaddr(void *arg, int mode)
@@ -1335,6 +1375,61 @@ func_exit:
         fclose(fp);
         fp = NULL;
     }
+    return rval;
+}
+
+/* function:
+ *      check and modify the legality of number
+ * parameters:
+ *      buf:            the number
+ * return:
+ *      0:              success
+ *      other:          failure
+ */
+int chk_num(char *buf)
+{
+    int i;
+    int len;
+
+    i = 0;
+    len = strlen(buf);
+    for(i = 0; i < len; i++){
+        if(buf[i] != '.' && buf[i] != '-' && (buf[i] < '0' || buf[i] > '9')){
+            EPT(stderr, "%s,%d:number illegal\n", __func__, __LINE__);
+            return 1;
+        }
+    }
+
+    while(strlen(buf) > 0){
+        if(buf[0] == '0'){
+            strcpy(buf, buf+1);
+        }
+        else break;
+    }
+
+    if(strlen(buf) > 0) return 0;
+    else{
+        EPT(stderr, "%s,%d:number illegal\n", __func__, __LINE__);
+        return 2;
+    }
+}
+
+int update_data_msg(const char *name, const char *value)
+{
+    int i;
+    int rval = 0;
+
+    for(i = 0; i < data_msg_cnt; i++){
+        if(0 == strcmp(name, data_msg[i].name)){
+            strcpy(data_msg[i].pvalue, value);
+            goto func_exit;
+        }
+    }
+
+    EPT(stderr, "%s:para name illegal\n", __func__);
+    rval = 1;
+
+func_exit:
     return rval;
 }
 

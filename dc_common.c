@@ -179,7 +179,7 @@ int dc_msg_send(int qid, void* msg, int len)
 
     mmsg_t* p = (mmsg_t*)msg;
 
-    if(qid < 0 || len < 0 || len > MAX_MSG_BUF + (int)sizeof(MADR)){
+    if(qid < 0 || len < 0 || len > MAX_MSG_BUF + (int)sizeof(int)){
         rval = 1;
         EPT(stderr, "\n%s:ERROR in %s:qid = %d, mtype = %ld, len = %d\n\n", qinfs[re_qin].pname, __func__, qid, p->mtype, len);
         goto func_exit;

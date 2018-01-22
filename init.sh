@@ -1,6 +1,6 @@
-inode_id=1
-./highmac_0119 $inode_id &
-./netlayer_0119 $inode_id &
-./routingp_0119 $inode_id &
-./if2tcpip_0119 $inode_id &
-./devcfg_0119 $inode_id &
+inode_id=8
+./highmac_0122 $inode_id &
+./netlayer_0122 $inode_id &
+./routingp_0122 $inode_id &
+./if2tcpip_0122 $inode_id &
+./devcfg_0122 $inode_id &

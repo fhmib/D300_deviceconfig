@@ -12,6 +12,7 @@ int main()
 
     memset(&test_msg_data, 0, sizeof(test_msg_data));
     memset(&test_rcv_data, 0, sizeof(test_rcv_data));
+    srand((unsigned)time(NULL));
 
     test_boa_key_q = ftok(PATH_CREAT_KEY, SN_BOA);
     test_boa_qid = msgget(test_boa_key_q, IPC_CREAT|QUEUE_MODE);
@@ -19,17 +20,17 @@ int main()
     test_dc_qid = msgget(test_dc_key_q, IPC_CREAT|QUEUE_MODE);
 
     test_msg_data.mtype = MMSG_DC_BOAREAD;
-    test_msg_data.node = 3;
-    test_len += sizeof(MADR);
+    test_msg_data.seq = rand()%1000 + 1;
+    test_len += sizeof(int);
     //strcpy(test_msg_data.data, "NodeId");
     strcpy(test_msg_data.data, "HighMacVersion FPGAVersion NetLayerVersion RoutingVersion If2TcpIpVersion DeviceConfigVersion NodeName NodeId");
-    strcat(test_msg_data.data, " NodeName NodeId IpAddress IpMask IpGateway CentreFreq TX1Power TX2Power HaveRTC BatteryVoltage BatteryType");
+    //strcat(test_msg_data.data, " NodeName NodeId IpAddress IpMask IpGateway CentreFreq TX1Power TX2Power HaveRTC BatteryVoltage BatteryType");
     test_len += strlen(test_msg_data.data);
 
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);
     msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, MMSG_DC_SNDBOA, 0);
 
-    printf("%s:data:\n%s\n", __FILE__, test_rcv_data.data);
+    printf("%s:seq:%d data:\n%s\n", __FILE__, test_rcv_data.seq, test_rcv_data.data);
 
     return 0;
 }

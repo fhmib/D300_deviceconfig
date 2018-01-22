@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <time.h>
 #include <pthread.h>
 #include <errno.h>
 #include <assert.h>
@@ -15,6 +16,9 @@
 #include <sys/stat.h>
 #include <sys/msg.h>
 #include <sys/sem.h>
+
+
+#define LINUX_TEST
 
 #define EPT                 fprintf
 #define ASSERT              assert
@@ -66,7 +70,7 @@ typedef enum _GB_MSG_TYPE
     MMSG_DC_BOAWRITE,
     MMSG_DC_SNDBOA,
     MMSG_DC_RET,
-    MMSG_DC_ITN             //devcfg inernal msg type
+    MMSG_DC_FAIL
 }GB_MSG;
 /*
 typedef enum _DC_MSG_TYPE
@@ -88,7 +92,7 @@ typedef struct _trans_data
     char    name[64];
     char    enable;
     char    isstr;
-    char*   pvalue;
+    char    *pvalue;
     int     (*opera)(void*,int);
 }trans_data;
 
@@ -104,7 +108,7 @@ typedef struct _dc_tshare_t
 typedef struct _mmsg_t
 {
     long    mtype;
-    MADR    node;
+    int     seq;
     char    data[MAX_MSG_BUF];
 }mmsg_t;
 #define MMSG_LEN        sizeof(mmsg_t)
@@ -172,16 +176,16 @@ typedef struct _cfg_node_list
 #define NODE_LENTH              sizeof(cfg_node)
 
 int     dc_init(void);
-void*   dc_qrv_thread(void*);
-void*   dc_cfg_thread(void*);
+void    *dc_qrv_thread(void*);
+void    *dc_cfg_thread(void*);
 int     dc_rmsg_proc(int, void*);
 //void    dc_info_init(void);
 void    dc_msg_malloc(void);
 void    dc_mem_free(void);
 int     dc_msg_to_boa(mmsg_t*, U16);
 
-int     dc_read_2boa(void*, int);
-int     dc_write_cfg(void*, int);
+int     dc_read_2boa(void*, int, int);
+int     dc_write_cfg(void*, int, int);
 int     write_data_msg(void);
 int     add_data(char*, int);
 //int     data_cfg_judge(char*, char*);
@@ -195,6 +199,6 @@ int     file_size(const char*);
 //int dc_strstr(char* find, char* dest);
 
 int     dc_cfg_func(int);
-int     update_data_msg(char*, char*);
+int     cmpwith_data_msg(char*, char*);
 
 #endif

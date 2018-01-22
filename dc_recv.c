@@ -10,6 +10,7 @@ extern dc_tshare_t dc_share;
 extern trans_data data_msg[];
 extern int data_msg_cnt;
 extern int data_cfg_len;
+extern int send_seq;
 extern int read_first;
 extern dc_cfg data_cfg[];
 
@@ -23,7 +24,7 @@ extern dc_cfg data_cfg[];
  *      0:                  success
  *      other:              failure
  */
-int dc_read_2boa(void* arg, int length)
+int dc_read_2boa(void* arg, int seq, int length)
 {
     int len = 0;
     mmsg_t snd_msg;
@@ -42,8 +43,8 @@ int dc_read_2boa(void* arg, int length)
 
     memset(&snd_msg, 0, sizeof(snd_msg));
     snd_msg.mtype = MMSG_DC_SNDBOA;
-    snd_msg.node = sa;
-    len += sizeof(MADR);
+    snd_msg.seq = seq;
+    len += sizeof(int);
 
     pthread_mutex_lock(&dc_share.mutex);
 
@@ -105,7 +106,7 @@ func_exit:
  *      0:                  success
  *      other:              failure
  */
-int dc_write_cfg(void* arg, int length)
+int dc_write_cfg(void* arg, int seq, int length)
 {
     int rval = 0;
     char* buf;
@@ -128,6 +129,7 @@ int dc_write_cfg(void* arg, int length)
 
     if(cfg_flag > 2){
         rval = 2;
+        cfg_flag++;
         EPT(stderr, "%s:data_cfg thread waited so long or write frequently. config operation stopped\n",__func__);
         pthread_mutex_unlock(&dc_share.mutex);
         goto func_exit;
@@ -141,7 +143,7 @@ int dc_write_cfg(void* arg, int length)
         if(ch == '"'){
             data_cfg_cnt++;
             memset(string, 0, sizeof(string));
-            for(pos2 = 1;; pos2++)
+            for(pos2 = 1; (pos1+pos2) < length; pos2++)
             {
                 ch = *(buf+pos1+pos2);
                 if(ch != '"'){
@@ -164,7 +166,7 @@ int dc_write_cfg(void* arg, int length)
             memset(string, 0, sizeof(string));
             memset(temp, 0, sizeof(temp));
             string[0] = '[';
-            for(pos2 = 1;; pos2++)
+            for(pos2 = 1; (pos1+pos2) < length; pos2++)
             {
                 ch = *(buf+pos1+pos2);
                 if(ch == '.' || ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
@@ -207,7 +209,7 @@ int dc_write_cfg(void* arg, int length)
         else if((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
             data_cfg_cnt++;
             memset(string, 0, sizeof(string));
-            for(pos2 = 1;; pos2++)
+            for(pos2 = 1; (pos1+pos2) < length; pos2++)
             {
                 ch = *(buf+pos1+pos2);
                 if(ch == '.' || ch == '-' || ch == '_' || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')){
@@ -240,6 +242,8 @@ int dc_write_cfg(void* arg, int length)
     if(data_cfg_cnt > 0){
         cfg_flag++;
     }
+
+    send_seq = seq;
     
     for(pos1 = 0; pos1 < data_cfg_cnt; pos1++)
     {
@@ -263,9 +267,11 @@ int write_data_msg()
 {
     int i;
     int rval = 0;
+#ifndef LINUX_TEST
     int fd;
     
     rval = drvFPGA_Init(&fd);
+#endif
     if(rval){
         EPT(stderr, "%s:initialize drvFPGA failed\n", __func__);
         goto func_exit;
@@ -281,7 +287,9 @@ int write_data_msg()
             data_msg[i].enable = 0;
         }
     }
+#ifndef LINUX_TEST
     drvFPGA_Close(&fd);
+#endif
 
 func_exit:
     return rval;

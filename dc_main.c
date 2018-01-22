@@ -36,6 +36,7 @@ const int data_msg_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
 const int data_cfg_len = sizeof(dc_cfg)*DATA_CNT;
 dc_cfg data_cfg[DATA_CNT];  //use for config thread
 int data_cfg_cnt;           //indecate how many configurations to be configured
+int send_seq;
 int cfg_flag;               //thread signal
 
 static pthread_t mrx_tid;
@@ -181,8 +182,8 @@ int dc_rmsg_proc(int len, void* data)
         rval = 1;
         goto func_exit;
     }
-    if(rmsg->node < 0 &&  rmsg->node > MAX_NODE_CNT-1){
-        EPT(stderr, "%s:receive a message with wrong node index:%d\n", __func__, rmsg->node);
+    if(rmsg->seq < 0 &&  rmsg->seq > 1000){
+        EPT(stderr, "%s:receive a message with wrong seq num:%d\n", __func__, rmsg->seq);
         rval = 2;
         goto func_exit;
     }
@@ -190,10 +191,10 @@ int dc_rmsg_proc(int len, void* data)
     switch(rmsg->mtype)
     {
         case MMSG_DC_BOAREAD:
-            dc_read_2boa(rmsg->data, len-sizeof(MADR));
+            dc_read_2boa(rmsg->data, rmsg->seq, len-sizeof(MADR));
             break;
         case MMSG_DC_BOAWRITE:
-            dc_write_cfg(rmsg->data, len-sizeof(MADR));
+            dc_write_cfg(rmsg->data, rmsg->seq, len-sizeof(MADR));
             break;
         default:
             EPT(stderr, "%s:receive unknown msg type, no = %ld\n", __func__, rmsg->mtype);

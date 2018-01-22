@@ -36,6 +36,8 @@ int dc_cfg_btytype(void*, int);
 //common functions
 int mod_infile(const char*, const char*, const char*, const char*, const char*);
 int chk_num(char*);
+int chk_str(char*);
+int chk_diff_from_dmsg(const char*, const char*);
 int update_data_msg(const char*, const char*);
 
 //bottom functions

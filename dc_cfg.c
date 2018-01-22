@@ -58,6 +58,7 @@ int dc_cfg_func(int arg)
     for(i = 0; i < count; i++)
     {
         rval = cmpwith_data_msg(data_cfg[i].name, data_cfg[i].value);
+        //EPT(stderr, "***********%d**********\n", rval);
         if(rval)
             continue;
 
@@ -75,14 +76,15 @@ int dc_cfg_func(int arg)
         strcpy(node_list_p->value, data_cfg[i].value);
     }
 
+    rval = 0;
 
 #ifndef LINUX_TEST
     rval = drvFPGA_Init(&fd);
-#endif
     if(rval){
         EPT(stderr, "%s:initialize drvFPGA failed\n", __func__);
         goto func_exit;
     }
+#endif
     node_list_p = node_list_h;
     while(1){
         if(NULL == node_list_p)
@@ -141,9 +143,11 @@ func_exit:
     if(rval){
         EPT(stderr, "%s:config failed. rval = %d\n", __func__, rval);
         memset(&snd_msg, 0, sizeof(snd_msg));
-        snd_msg.mtype = MMSG_DC_FAIL;
+        snd_msg.mtype = MMSG_DC_RET;
         snd_msg.seq = send_seq;
         len += sizeof(int);
+        snd_msg.data[0] = 1;
+        len += strlen(snd_msg.data);
         for(; send_num > 0; send_num--){
             dc_msg_to_boa(&snd_msg, len);
         }

@@ -24,15 +24,12 @@ int main()
     test_len += sizeof(int);
     //strcpy(test_msg_data.data, "\"NodeName\": \"RZXT_NODE[3]\" \"TX1Power\": Abcc \"TX2Power\": 122a \"HaveRTC\": 0 \"Rssi_Ant0\": [12, 32, r3, ba, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]");
     //strcpy(test_msg_data.data, " \"TX1Power\": 10 \"TX2Power\": 10 \"NodeId\": 1 \"NodeName\": \"rzxt_[1e3]\" \"HighMacVersion\": \"highmac_0119\" \"NetLayerVersion\": \"netlayer_0119\" \"RoutingVersion\": \"routingp_0119\" \"If2TcpIpVersion\": \"if2tcpip_0119\" \"DeviceConfigVersion\": \"devcfg_0119\" \"FPGAVersion\": \"FPGAVER_0119\"");
-    strcpy(test_msg_data.data, "\"NodeId\": 8 \"NodeName\": \"rzxt_mech[1r3]\" \"HighMacVersion\": \"highmac_0122\" \"NetLayerVersion\": \"netlayer_0122\" \"RoutingVersion\": \"routingp_0122\" \"If2TcpIpVersion\": \"if2tcpip_0122\" \"DeviceConfigVersion\": \"devcfg_0122\" \"FPGAVersion\": \"FPGAVER_0122\"");
+    strcpy(test_msg_data.data, "\"NodeId\": .08 \"NodeName\": \" rzxt_mech[193]\" \"HighMacVersion\": \"highmac_0122_2\" \"NetLayerVersion\": \"netlayer_0122_2\" \"RoutingVersion\": \"routingp_0122_2\" \"If2TcpIpVersion\": \"if2tcpip_0122_2\" \"DeviceConfigVersion\": \"devcfg_0122_2\" \"FPGAVersion\": \"FPGAVER_0122_2\"");
     test_len += strlen(test_msg_data.data);
     msgsnd(test_dc_qid, &test_msg_data, test_len, 0);
-    msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, 0, 0);
-    if(test_rcv_data.mtype == MMSG_DC_RET){
-        EPT(stderr, "%s:receive type=MMSG_DC_RET\n", __func__);
-    }
-    else if(test_rcv_data.mtype == MMSG_DC_FAIL){
-        EPT(stderr, "%s:receive type=MMSG_DC_FAIL\n", __func__);
+    msgrcv(test_boa_qid, &test_rcv_data, MAX_MSG_BUF, MMSG_DC_RET, 0);
+    if(test_rcv_data.data[0]){
+        EPT(stderr, "%s:write to device failed\n", __func__);
     }
 
     return 0;

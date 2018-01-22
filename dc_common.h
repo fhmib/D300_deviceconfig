@@ -70,7 +70,6 @@ typedef enum _GB_MSG_TYPE
     MMSG_DC_BOAWRITE,
     MMSG_DC_SNDBOA,
     MMSG_DC_RET,
-    MMSG_DC_FAIL
 }GB_MSG;
 /*
 typedef enum _DC_MSG_TYPE

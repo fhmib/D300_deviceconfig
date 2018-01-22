@@ -80,6 +80,11 @@ int dc_cfg_hmver(void *arg, int mode)
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
+        rval = chk_str(value);
+        if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_HMVER, value);
+        if(rval) goto func_exit;
+
         rval = mod_infile(CONFIG_FILE, "highmac", "./", " ", value);
 
         if(rval){
@@ -166,6 +171,11 @@ int dc_cfg_nlver(void *arg, int mode)
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
+
+        rval = chk_str(value);
+        if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_NLVER, value);
+        if(rval) goto func_exit;
 
         rval = mod_infile(CONFIG_FILE, "netlayer", "./", " ", value);
 
@@ -254,6 +264,11 @@ int dc_cfg_rtver(void *arg, int mode)
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
+        rval = chk_str(value);
+        if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_RTVER, value);
+        if(rval) goto func_exit;
+
         rval = mod_infile(CONFIG_FILE, "routingp", "./", " ", value);
 
         if(rval){
@@ -340,6 +355,11 @@ int dc_cfg_ipver(void *arg, int mode)
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
+
+        rval = chk_str(value);
+        if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_IPVER, value);
+        if(rval) goto func_exit;
 
         rval = mod_infile(CONFIG_FILE, "if2tcpip", "./", " ", value);
 
@@ -428,6 +448,11 @@ int dc_cfg_dcver(void *arg, int mode)
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
+        rval = chk_str(value);
+        if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_DCVER, value);
+        if(rval) goto func_exit;
+
         rval = mod_infile(CONFIG_FILE, "devcfg", "./", " ", value);
 
         if(rval){
@@ -514,6 +539,11 @@ int dc_cfg_fpgaver(void *arg, int mode)
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
+
+        rval = chk_str(value);
+        if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_FPGAVER, value);
+        if(rval) goto func_exit;
 
         rval = mod_infile(FPGA_FILE, NULL, "FPGANAME=\"", "\"", value);
 
@@ -606,66 +636,19 @@ int dc_cfg_nodeid(void* arg, int mode)
         }
     }
     else{
-        int size;
         char* p_value = (char*)arg;
-        char config_path[] = CONFIG_FILE;
-        char* buf;
-        char* pos;
 
         rval = chk_num(p_value);
         if(rval) goto func_exit;
-        len = strlen(p_value);
-        if(2 == len && *p_value == '0'){
-            *p_value = *(p_value + 1);
-            *(p_value + 1) = 0;
+        rval = chk_diff_from_dmsg(DNAME_NDID, p_value);
+        if(rval) goto func_exit;
+
+        rval = mod_infile(CONFIG_FILE, NULL, "node_id=", NULL, p_value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
         }
-        size = file_size(config_path);
-        //EPT(stderr, "%s:file length = %d\n", __func__, size);
-        buf = (char*)malloc(sizeof(char)*(size+2));
-        memset(buf, 0, sizeof(char)*(size+2));
-        fp = fopen(CONFIG_FILE, "r");
-        while(!feof(fp)){
-            memset(line, 0, sizeof(line));
-            if(NULL == fgets(line, sizeof(line), fp)){
-                continue;
-            }
-            pos = strstr(line, "node_id=");
-            if(NULL == pos){
-                strcat(buf, line);
-                continue;
-            }
-
-            //jump after ' '
-            len = strlen(line);
-            for(i = 0; i < len; i++){
-                if(line[i] == ' ')
-                    continue;
-                else
-                    break;
-            }
-            if(line[i] == '#'){
-                strcat(buf, line);
-                continue;
-            }
-
-            pos += strlen("node_id=");
-            strcpy(pos, p_value);
-            pos += strlen(p_value);
-            *pos++ = '\n';
-            *pos = 0;
-            strcat(buf, line);
-        }
-        //EPT(stderr, "*****************buf****************\n");
-        //EPT(stderr, "%s\n", buf);
-        //EPT(stderr, "*****************buf****************\n");
-        fclose(fp);
-        fp = fopen(CONFIG_FILE, "w");
-        fprintf(fp, "%s", buf);
-
-        free(buf);
-        fclose(fp);
-        fp = NULL;
-
         rval = update_data_msg(DNAME_NDID, p_value);
     }
 
@@ -752,11 +735,7 @@ int dc_cfg_nodename(void* arg, int mode)
         }
     }
     else{
-        int size;
         char *p_value = (char*)arg;
-        char devinfo_path[] = DEVINFO_FILE;
-        char *buf;
-        char *pos;
         
         len = strlen(p_value);
         if(len <= 0 || len >= 64){
@@ -764,50 +743,17 @@ int dc_cfg_nodename(void* arg, int mode)
             rval = 3;
             goto func_exit;
         }
-        size = file_size(devinfo_path);
-        buf = (char*)malloc(sizeof(char)*(size+2));
-        memset(buf, 0, sizeof(char)*(size+2));
-        fp = fopen(DEVINFO_FILE, "r");
-        while(!feof(fp)){
-            memset(line, 0, sizeof(line));
-            if(NULL == fgets(line, sizeof(line), fp)){
-                continue;
-            }
+        rval = chk_str(p_value);
+        if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_NDNAME, p_value);
+        if(rval) goto func_exit;
 
-            //jump after ' '
-            len = strlen(line);
-            for(i = 0; i < len; i++){
-                if(line[i] == ' ')
-                    continue;
-                else
-                    break;
-            }
-            if('#' == line[i] || ('/' == line[i] && '/' == line [i+1])){
-                strcat(buf, line);
-                continue;
-            }
-            pos = strstr(line, "NodeName=");
-            if(NULL == pos){
-                strcat(buf, line);
-                continue;
-            }
-            pos += strlen("NodeName=");
-            strcpy(pos, p_value);
-            pos += strlen(p_value);
-            *pos++ = '\n';
-            *pos = 0;
-            strcat(buf, line);
+        rval = mod_infile(DEVINFO_FILE, NULL, "NodeName=", NULL, p_value);
+
+        if(rval){
+            EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
+            goto func_exit;
         }
-        //EPT(stderr, "*****************buf****************\n");
-        //EPT(stderr, "%s\n", buf);
-        //EPT(stderr, "*****************buf****************\n");
-        fclose(fp);
-        fp = fopen(DEVINFO_FILE, "w");
-        fprintf(fp, "%s", buf);
-
-        free(buf);
-        fclose(fp);
-        fp = NULL;
 
         rval = update_data_msg(DNAME_NDNAME, p_value);
     }
@@ -871,6 +817,9 @@ int dc_cfg_tx1(void *arg, int mode)
     else{
         rval = chk_num((char*)arg);
         if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_TX1, (char*)arg);
+        if(rval) goto func_exit;
+
         rd_data = atoi((char*)arg);
         rd_data = 4 * rd_data;
         ad9361_write(0x73, rd_data);
@@ -909,6 +858,9 @@ int dc_cfg_tx2(void *arg, int mode)
     else{
         rval = chk_num((char*)arg);
         if(rval) goto func_exit;
+        rval = chk_diff_from_dmsg(DNAME_TX2, (char*)arg);
+        if(rval) goto func_exit;
+
         rd_data = atoi((char*)arg);
         rd_data = 4 * rd_data;
         ad9361_write(0x75, rd_data);
@@ -1391,8 +1343,9 @@ int chk_num(char *buf)
     int i;
     int len;
 
-    i = 0;
     len = strlen(buf);
+    if(len < 1) return 1;
+
     for(i = 0; i < len; i++){
         if(buf[i] != '.' && buf[i] != '-' && (buf[i] < '0' || buf[i] > '9')){
             EPT(stderr, "%s,%d:number illegal\n", __func__, __LINE__);
@@ -1400,18 +1353,77 @@ int chk_num(char *buf)
         }
     }
 
-    while(strlen(buf) > 0){
-        if(buf[0] == '0'){
+    while(len){
+        if(buf[0] == '0' && ((len > 1) ? (buf[1] != '.') : 1)){
             strcpy(buf, buf+1);
+            len--;
+            continue;
+        }
+        else if(buf[0] == '.'){
+            strcpy(buf, buf+1);
+            len--;
+            continue;
         }
         else break;
     }
+    if(len < 1) return 1;
 
-    if(strlen(buf) > 0) return 0;
-    else{
-        EPT(stderr, "%s,%d:number illegal\n", __func__, __LINE__);
-        return 2;
+    return 0;
+}
+
+/* function:
+ *      check and modify the legality of number
+ * parameters:
+ *      buf:            the string
+ * return:
+ *      0:              success
+ *      other:          failure
+ */
+int chk_str(char *buf)
+{
+    int len;
+
+    len = strlen(buf);
+    if(len < 1) return 1;
+
+    while(len){
+        if(buf[0] == ' '){
+            strcpy(buf, buf+1);
+            len--;
+            continue;
+        }
+        else if(buf[len-1] == ' '){
+            buf[len-1] = 0;
+            len--;
+            continue;
+        }
+        else break;
     }
+    if(len < 1) return 1;
+
+    return 0;
+}
+
+/* function:
+ *      check whether buf is same to value of data_msg.
+ * parameters:
+ *      buf:            value that user want to modify.
+ * return:
+ *      0:              different
+ *      other:          same
+ */
+int chk_diff_from_dmsg(const char *pname, const char *buf)
+{
+    int i;
+
+    for(i = 0; i < data_msg_cnt; i++){
+        if(0 == strcmp(pname, data_msg[i].name)){
+            if(0 == strcmp(buf, data_msg[i].pvalue)) return 1;
+            else return 0;
+        }
+        else continue;
+    }
+    return 2;
 }
 
 int update_data_msg(const char *name, const char *value)

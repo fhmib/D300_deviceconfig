@@ -42,8 +42,8 @@ int dc_read_2boa(void* arg, int seq, int length)
     buf = (char*)arg;
 
     memset(&snd_msg, 0, sizeof(snd_msg));
-    snd_msg.mtype = MMSG_DC_SNDBOA;
     snd_msg.seq = seq;
+    snd_msg.mtype = MMSG_DC_SNDBOA+seq;
     len += sizeof(int);
 
     pthread_mutex_lock(&dc_share.mutex);
@@ -77,7 +77,7 @@ int dc_read_2boa(void* arg, int seq, int length)
     //update device_info;
     rval = write_data_msg();
     
-    EPT(stderr, "%s,%d:I'm here\n", __func__, __LINE__);
+    //EPT(stderr, "%s,%d:I'm here\n", __func__, __LINE__);
 
     //put data to snd_msg.data
     rval = add_data(snd_msg.data, MAX_MSG_BUF);

@@ -17,7 +17,9 @@ int dc_cfg_func(int arg)
     int qid, i, count;
     int rval = 0;
     int len = 0;
-    int send_num;                               //according to cfg_flag, ensure send msg num;
+    int send_num = 0;;                          //ensure sending package's num according to cfg_flag.
+    int wrong_cnt = 0;
+    char wrong_buf[1024];                       //store names of options which configured failed.
 #ifndef LINUX_TEST
     int fd;
 #endif
@@ -25,6 +27,7 @@ int dc_cfg_func(int arg)
     mmsg_t snd_msg;
     cfg_node* node_list_h = NULL;              //head of node list
     cfg_node* node_list_p = NULL;              //current position of node list
+    memset(wrong_buf, 0, sizeof(wrong_buf));
 
     qid = arg;
     if(qid < 0){
@@ -59,8 +62,19 @@ int dc_cfg_func(int arg)
     {
         rval = cmpwith_data_msg(data_cfg[i].name, data_cfg[i].value);
         //EPT(stderr, "***********%d**********\n", rval);
-        if(rval)
+        if(rval == 1){
+            //EPT(stderr, "%s:%s's new value is same to old\n", __func__, data_cfg[i].name);
+            if(wrong_cnt) strcat(wrong_buf, " ");
+            strcat(wrong_buf, data_cfg[i].name);
+            wrong_cnt++;
             continue;
+        }
+        if(rval == 2){
+            rval = 3;
+            EPT(stderr, "%s:wrong name[%s],function can not continue because it may causes errors\n", __func__, data_msg[i].name);
+            pthread_mutex_unlock(&dc_share.mutex);
+            goto func_exit;
+        }
 
         if(NULL == node_list_h){
             node_list_h = (cfg_node*)malloc(NODE_LENTH);
@@ -82,6 +96,7 @@ int dc_cfg_func(int arg)
     rval = drvFPGA_Init(&fd);
     if(rval){
         EPT(stderr, "%s:initialize drvFPGA failed\n", __func__);
+        pthread_mutex_unlock(&dc_share.mutex);
         goto func_exit;
     }
 #endif
@@ -93,6 +108,12 @@ int dc_cfg_func(int arg)
             if(0 == strcmp(node_list_p->name, data_msg[i].name)){
                 if(data_msg[i].opera){
                     rval = data_msg[i].opera(node_list_p->value, 1);
+                    if(rval){
+                        EPT(stderr, "%s:config %s failed\n", __func__, data_msg[i].name);
+                        if(wrong_cnt) strcat(wrong_buf, " ");
+                        strcat(wrong_buf, data_msg[i].name);
+                        wrong_cnt++;
+                    }
                     break;
                 }
                 else{
@@ -103,6 +124,7 @@ int dc_cfg_func(int arg)
         }
         node_list_p = node_list_p->next;
     }
+    rval = 0;
 #ifndef LINUX_TEST
     drvFPGA_Close(&fd);
 #endif
@@ -112,6 +134,15 @@ int dc_cfg_func(int arg)
     snd_msg.mtype = MMSG_DC_RET;
     snd_msg.seq = send_seq;
     len += sizeof(int);
+    //EPT(stderr, "rval:%d, wrong_cnt:%d\n", rval, wrong_cnt);
+    if(wrong_cnt == 0) snd_msg.data[0] = 1;
+    else snd_msg.data[0] = wrong_cnt;
+    len += 1;
+    *(int*)(snd_msg.data+1) = wrong_cnt;
+    len += sizeof(int);
+    strcpy(snd_msg.data+1+sizeof(int), wrong_buf);
+    len += strlen(wrong_buf);
+    //EPT(stderr, "snd_msg.data[0]:%d\n", (int)snd_msg.data[0]);
     for(; send_num > 0; send_num--){
         dc_msg_to_boa(&snd_msg, len);
     }
@@ -146,7 +177,7 @@ func_exit:
         snd_msg.mtype = MMSG_DC_RET;
         snd_msg.seq = send_seq;
         len += sizeof(int);
-        snd_msg.data[0] = 1;
+        snd_msg.data[0] = 0;
         len += strlen(snd_msg.data);
         for(; send_num > 0; send_num--){
             dc_msg_to_boa(&snd_msg, len);
@@ -175,6 +206,7 @@ int cmpwith_data_msg(char* name, char* value)
     {
         if(0 == strcmp(name, data_msg[i].name)){
             if(0 == strcmp(value, data_msg[i].pvalue)){
+                //EPT(stderr, "[%s] [%s]\n", value, data_msg[i].pvalue);
                 rval = 1;
                 goto func_exit;
             }

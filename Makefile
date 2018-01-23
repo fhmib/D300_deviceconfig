@@ -4,8 +4,7 @@ OBJECTS = dc_common.o dc_main.o dc_recv.o dc_cfg.o dc_monitor.o
 
 all: $(OBJECTS)
 	$(CC) -o devcfg $(OBJECTS) -lpthread
-	$(CC) -o read dc_test_r.c
-	$(CC) -o write dc_test_w.c
+	$(CC) -o interface boa_inter.c
 	$(CC) -o rmmsg dc_rmmsg.c
 
 
@@ -25,4 +24,4 @@ dc_monitor.o: dc_common.h dc_monitor.h dc_monitor.c
 	$(CC) -c dc_monitor.c
 
 clean:
-	rm -f *.o *~ devcfg read write rmmsg
+	rm -f *.o *~ devcfg interface rmmsg

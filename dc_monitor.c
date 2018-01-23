@@ -74,20 +74,27 @@ int dc_cfg_hmver(void *arg, int mode)
         len = strlen((char*)arg);
         if(len < 1 || len > 64){
             EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-            rval = 3;
+            rval = 2;
             goto func_exit;
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
         rval = chk_str(value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_HMVER, value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(CONFIG_FILE, "highmac", "./", " ", value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -166,20 +173,27 @@ int dc_cfg_nlver(void *arg, int mode)
         len = strlen((char*)arg);
         if(len < 1 || len > 64){
             EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-            rval = 3;
+            rval = 2;
             goto func_exit;
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
         rval = chk_str(value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_NLVER, value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(CONFIG_FILE, "netlayer", "./", " ", value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -258,20 +272,27 @@ int dc_cfg_rtver(void *arg, int mode)
         len = strlen((char*)arg);
         if(len < 1 || len > 64){
             EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-            rval = 3;
+            rval = 2;
             goto func_exit;
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
         rval = chk_str(value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_RTVER, value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(CONFIG_FILE, "routingp", "./", " ", value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -350,20 +371,27 @@ int dc_cfg_ipver(void *arg, int mode)
         len = strlen((char*)arg);
         if(len < 1 || len > 64){
             EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-            rval = 3;
+            rval = 2;
             goto func_exit;
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
         rval = chk_str(value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_IPVER, value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(CONFIG_FILE, "if2tcpip", "./", " ", value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -442,20 +470,27 @@ int dc_cfg_dcver(void *arg, int mode)
         len = strlen((char*)arg);
         if(len < 1 || len > 64){
             EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-            rval = 3;
+            rval = 2;
             goto func_exit;
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
         rval = chk_str(value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_DCVER, value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(CONFIG_FILE, "devcfg", "./", " ", value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -534,20 +569,27 @@ int dc_cfg_fpgaver(void *arg, int mode)
         len = strlen((char*)arg);
         if(len < 1 || len > 64){
             EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-            rval = 3;
+            rval = 2;
             goto func_exit;
         }
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
 
         rval = chk_str(value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_FPGAVER, value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(FPGA_FILE, NULL, "FPGANAME=\"", "\"", value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -639,13 +681,20 @@ int dc_cfg_nodeid(void* arg, int mode)
         char* p_value = (char*)arg;
 
         rval = chk_num(p_value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_NDID, p_value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(CONFIG_FILE, NULL, "node_id=", NULL, p_value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -740,17 +789,24 @@ int dc_cfg_nodename(void* arg, int mode)
         len = strlen(p_value);
         if(len <= 0 || len >= 64){
             EPT(stderr, "%s:wrong parameter:arg = [%s]", __func__, p_value);
-            rval = 3;
+            rval = 2;
             goto func_exit;
         }
         rval = chk_str(p_value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_NDNAME, p_value);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rval = mod_infile(DEVINFO_FILE, NULL, "NodeName=", NULL, p_value);
 
         if(rval){
+            rval = 4;
             EPT(stderr, "%s:modify file failed, rval = %d\n", __func__, rval);
             goto func_exit;
         }
@@ -816,9 +872,15 @@ int dc_cfg_tx1(void *arg, int mode)
     }
     else{
         rval = chk_num((char*)arg);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_TX1, (char*)arg);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rd_data = atoi((char*)arg);
         rd_data = 4 * rd_data;
@@ -857,9 +919,15 @@ int dc_cfg_tx2(void *arg, int mode)
     }
     else{
         rval = chk_num((char*)arg);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 2;
+            goto func_exit;
+        }
         rval = chk_diff_from_dmsg(DNAME_TX2, (char*)arg);
-        if(rval) goto func_exit;
+        if(rval){
+            rval = 3;
+            goto func_exit;
+        }
 
         rd_data = atoi((char*)arg);
         rd_data = 4 * rd_data;

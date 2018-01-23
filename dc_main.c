@@ -182,7 +182,7 @@ int dc_rmsg_proc(int len, void* data)
         rval = 1;
         goto func_exit;
     }
-    if(rmsg->seq < 0 &&  rmsg->seq > 1000){
+    if(rmsg->seq < 1 ||  rmsg->seq > 1000){
         EPT(stderr, "%s:receive a message with wrong seq num:%d\n", __func__, rmsg->seq);
         rval = 2;
         goto func_exit;

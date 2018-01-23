@@ -61,12 +61,10 @@ int dc_get_qids(void* arg)
     qs = 0;
     for(i = 0; i < cnt_p; i++)
     {
-        /*
         qid = msgget(qinfs[i].key_q, QUEUE_MODE);
         if(-1 != qid){
             msgctl(qid, IPC_RMID, 0);
         }
-        */
         qid = msgget(qinfs[i].key_q, IPC_CREAT|QUEUE_MODE);
         if(qid == -1){
             EPT(stderr, "%s:can not get queue for %s.\n", name, qinfs[i].pname);

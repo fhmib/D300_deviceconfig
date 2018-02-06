@@ -32,6 +32,8 @@ int dc_cfg_ipgate(void*, int);
 int dc_cfg_rtc(void*, int);
 int dc_cfg_btyvol(void*, int);
 int dc_cfg_btytype(void*, int);
+int dc_cfg_sndrate(void*, int);
+int dc_cfg_rcvrate(void*, int);
 
 //common functions
 int mod_infile(const char*, const char*, const char*, const char*, const char*);

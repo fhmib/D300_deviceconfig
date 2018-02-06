@@ -29,7 +29,9 @@ trans_data data_msg[] =
     {DNAME_IPGATE, 0, 1, NULL, dc_cfg_ipgate},
     {DNAME_RTC, 0, 0, NULL, dc_cfg_rtc},
     {DNAME_BTYVOL, 0, 0, NULL, dc_cfg_btyvol},
-    {DNAME_BTYTYPE, 0, 1, NULL, dc_cfg_btytype}
+    {DNAME_BTYTYPE, 0, 1, NULL, dc_cfg_btytype},
+    {DNAME_SNDRATE, 0, 1, NULL, dc_cfg_sndrate},
+    {DNAME_RCVRATE, 0, 1, NULL, dc_cfg_rcvrate}
 };
 const int data_msg_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
 #define DATA_CNT        sizeof(data_msg)/sizeof(data_msg[0])
@@ -38,8 +40,10 @@ dc_cfg data_cfg[DATA_CNT];  //use for config thread
 int data_cfg_cnt;           //indecate how many configurations to be configured
 int send_seq;
 int cfg_flag;               //thread signal
+double rcv_rate, snd_rate;
 
 static pthread_t mrx_tid;
+static pthread_t net_tid;
 static pthread_t cfg_tid;
 
 MADR sa;                //self address
@@ -49,6 +53,7 @@ int main(int argc, char* argv[])
 {
     int rval = 0;
     int stop;
+    char path[] = "eth0";
 
     memset(pname, 0, sizeof(pname));
     strcpy(pname, argv[0]);
@@ -79,10 +84,16 @@ int main(int argc, char* argv[])
         goto process_return;
     }
 
+    rval = pthread_create(&net_tid, NULL, dc_net_thread, path);
+    if(rval != 0){
+        EPT(stderr, "%s:can not open create net thread\n", argv[0]);
+        rval = 3;
+        goto process_return;
+    }
     rval = pthread_create(&cfg_tid, NULL, dc_cfg_thread, &boa_qid);
     if(rval != 0){
         EPT(stderr, "%s:can not open config thread\n", argv[0]);
-        rval = 4;
+        rval = 3;
         goto process_return;
     }
 
@@ -93,11 +104,13 @@ int main(int argc, char* argv[])
         EPT(stderr, "%s:waiting for the exit of sub threads\n", argv[0]);
         pthread_cond_wait(&dc_share.cond, &dc_share.mutex);
         EPT(stderr, "%s:share.qr_run = %d, share.cfg_run = %d\n", argv[0], dc_share.qr_run, dc_share.cfg_run);
-        if(dc_share.qr_run == 0 || dc_share.cfg_run == 0){
+        if(dc_share.qr_run == 0 || dc_share.cfg_run == 0 || dc_share.net_run == 0){
             if(dc_share.qr_run == 0)
                 EPT(stderr, "msg receiving thread quit\n");
             if(dc_share.cfg_run == 0)
                 EPT(stderr, "config thread quit\n");
+            if(dc_share.net_run == 0)
+                EPT(stderr, "net thread quit\n");
             stop = 1;
             continue;
         }
@@ -220,6 +233,8 @@ int dc_init()
     read_first = 0;
     cfg_flag = 0;
     data_cfg_cnt = 0;
+    rcv_rate = 0;
+    snd_rate = 0;
 
     dc_msg_malloc();
     //for test
@@ -357,6 +372,16 @@ void dc_msg_malloc()
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
+        else if(0 == strcmp(DNAME_SNDRATE, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_RCVRATE, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
         else{
             //something new that be forgeted to added in this func will use default len = 64
             len = 64;
@@ -415,6 +440,79 @@ thread_return:
     dc_share.cfg_run = 0;
     pthread_cond_signal(&dc_share.cond);
     pthread_mutex_unlock(&dc_share.mutex);
+
+    sleep(1);
+    pthread_exit((void*)&rval);
+}
+
+void *dc_net_thread(void *p_name)
+{
+    FILE *fp = NULL;
+    int rval = 0;
+    int len;
+    int i = 0;
+    char *pos, *p;
+    double pre_snd, pre_rcv;
+    double now_snd, now_rcv;
+
+    pthread_detach(pthread_self());
+
+    now_rcv = 0;
+    now_snd = 0;
+    while(1){
+
+        pre_rcv = now_rcv;
+        pre_snd = now_snd;
+        //fprintf(stderr, "pre_rcv:%lf\t pre_snd:%lf\n", pre_rcv, pre_snd);
+        fp = fopen(NET_PATH, "r");
+        if(fp == NULL){
+            fprintf(stderr, "can not open "  NET_PATH "\n");
+            rval = 1;
+            goto thread_return;
+        }
+
+        char buf[1024];
+        memset(buf, 0, 1024);
+        len = fread(buf, 1, 1024, fp);
+        
+        pos = strstr(buf, (char*)p_name);
+        if(pos == NULL){
+            fprintf(stderr, "%s:can not find dev:%s\n", __func__, (char*)p_name);
+            fclose(fp);
+            fp = NULL;
+            sleep(1);
+            continue;
+        }
+
+        i = 0;
+        for(p = strtok(pos, " \n\t\r"); p; p = strtok(NULL, " \n\t\r")){
+            i++;
+            if(i == 2)
+                now_rcv = atod(p);
+            if(i == 10){
+                now_snd = atod(p);
+                break;
+            }
+        }
+
+        now_rcv = now_rcv/(1024/8);
+        now_snd = now_snd/(1024/8);
+        //fprintf(stderr, "now_rcv:%lf\t now_snd:%lf\n", now_rcv, now_snd);
+
+        pthread_mutex_lock(&dc_share.net_mutex);
+        snd_rate = now_snd - pre_snd;
+        rcv_rate = now_rcv - pre_rcv;
+        pthread_mutex_unlock(&dc_share.net_mutex);
+        fclose(fp);
+        fp = NULL;
+        sleep(1);
+    }
+
+thread_return:
+    pthread_mutex_lock(&dc_share.net_mutex);
+    dc_share.net_run = 0;
+    pthread_cond_signal(&dc_share.cond);
+    pthread_mutex_unlock(&dc_share.net_mutex);
 
     sleep(1);
     pthread_exit((void*)&rval);

@@ -205,16 +205,14 @@ int cmpwith_data_msg(char* name, char* value)
     for(i = 0; i < data_msg_cnt; i++)
     {
         if(0 == strcmp(name, data_msg[i].name)){
+            if(0 == strcmp(DNAME_RCVRATE, name)) goto func_exit;
+            if(0 == strcmp(DNAME_SNDRATE, name)) goto func_exit;
             if(0 == strcmp(value, data_msg[i].pvalue)){
                 //EPT(stderr, "[%s] [%s]\n", value, data_msg[i].pvalue);
                 rval = 1;
                 goto func_exit;
             }
-            else{
-                //strcpy(data_msg[i].pvalue, value);
-                rval = 0;
-                goto func_exit;
-            }
+            else goto func_exit;
         }
     }
 

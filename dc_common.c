@@ -24,7 +24,9 @@ const int cnt_p = sizeof(qinfs)/sizeof(qinfs[0]);
 dc_tshare_t dc_share = 
 {
     PTHREAD_MUTEX_INITIALIZER,
+    PTHREAD_MUTEX_INITIALIZER,
     PTHREAD_COND_INITIALIZER,
+    1,
     1,
     1
 };
@@ -212,4 +214,13 @@ int file_size(const char* filename)
     size = statbuf.st_size;
 
     return size;
+}
+
+double atod(char *str)
+{
+    double i;
+
+    sscanf(str, "%lf", &i);
+
+    return i;
 }

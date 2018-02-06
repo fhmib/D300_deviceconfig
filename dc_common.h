@@ -18,7 +18,7 @@
 #include <sys/sem.h>
 
 
-#define LINUX_TEST
+//#define LINUX_TEST
 
 #define EPT                 fprintf
 #define ASSERT              assert
@@ -29,6 +29,7 @@
 
 #define MADR                U8
 #define PATH_CREAT_KEY      "/etc/profile"          /*path name for creatint all queue, can be modified*/
+#define NET_PATH            "/proc/net/dev"
 #define PNAME_DEVCFG        "devcfg"
 #define PNAME_BOA           "boa"
 #define SN_DEVCFG           20
@@ -63,6 +64,8 @@
 #define DNAME_RTC           "HaveRTC"
 #define DNAME_BTYVOL        "BatteryVoltage"
 #define DNAME_BTYTYPE       "BatteryType"
+#define DNAME_SNDRATE       "SendRate"
+#define DNAME_RCVRATE       "ReceiveRate"
 
 typedef enum _GB_MSG_TYPE
 {
@@ -98,10 +101,12 @@ typedef struct _trans_data
 //struct for the data sharing among thread
 typedef struct _dc_tshare_t
 {
-    pthread_mutex_t      mutex;
-    pthread_cond_t       cond;
-    int                  qr_run;
-    int                  cfg_run;
+    pthread_mutex_t     mutex;
+    pthread_mutex_t     net_mutex;
+    pthread_cond_t      cond;
+    int                 qr_run;
+    int                 cfg_run;
+    int                 net_run;
 }dc_tshare_t;
 
 typedef struct _mmsg_t
@@ -177,6 +182,7 @@ typedef struct _cfg_node_list
 int     dc_init(void);
 void    *dc_qrv_thread(void*);
 void    *dc_cfg_thread(void*);
+void    *dc_net_thread(void*);
 int     dc_rmsg_proc(int, void*);
 //void    dc_info_init(void);
 void    dc_msg_malloc(void);
@@ -189,12 +195,13 @@ int     write_data_msg(void);
 int     add_data(char*, int);
 //int     data_cfg_judge(char*, char*);
 //for test
-void    write_data_for_test(void);
+//void    write_data_for_test(void);
 
 int     dc_get_qids(void* arg);
 int     dc_queues_delete(void);
 int     dc_msg_send(int, void*, int);
 int     file_size(const char*);
+double  atod(char*);
 //int dc_strstr(char* find, char* dest);
 
 int     dc_cfg_func(int);

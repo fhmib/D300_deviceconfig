@@ -4,6 +4,8 @@
 extern trans_data data_msg[];
 extern int data_msg_cnt;
 extern MADR sa;
+extern double rcv_rate;
+extern double snd_rate;
 
 void *g_FPGA_pntr;
 
@@ -820,6 +822,8 @@ func_exit:
 
 int dc_cfg_freq(void *arg, int mode)
 {
+    int rval = 0;
+
     if(0 == mode){
         int i;
 
@@ -846,10 +850,11 @@ int dc_cfg_freq(void *arg, int mode)
     else{
         int freq = *(int*)arg;
         EPT(stderr, "%s:can not config Frequency:%dMhz", __func__, freq);
+        rval = 10;
         goto func_exit;
     }
 func_exit:
-    return 0;
+    return rval;
 }
 
 int dc_cfg_tx1(void *arg, int mode)
@@ -950,6 +955,7 @@ int dc_cfg_ipaddr(void *arg, int mode)
 {
     char ipaddr[16];
     int i;
+    int rval = 0;
 
     if(0 == mode){
         for(i = 0; i < data_msg_cnt; i++){
@@ -964,18 +970,19 @@ int dc_cfg_ipaddr(void *arg, int mode)
         memset(ipaddr, 0, sizeof(ipaddr));
         strcpy(ipaddr, (char*)arg);
         EPT(stderr, "%s:can not config ipaddr:%s", __func__, ipaddr);
-        //maybe need more code
+        rval = 10;
         goto func_exit;
     }
 
 func_exit:
-    return 0;
+    return rval;
 }
 
 int dc_cfg_ipmask(void *arg, int mode)
 {
     char ipmask[16];
     int i;
+    int rval = 0;
 
     if(0 == mode){
         for(i = 0; i < data_msg_cnt; i++){
@@ -990,18 +997,19 @@ int dc_cfg_ipmask(void *arg, int mode)
         memset(ipmask, 0, sizeof(ipmask));
         strcpy(ipmask, (char*)arg);
         EPT(stderr, "%s:can not config ipmask:%s\n", __func__, ipmask);
-        //maybe need more code
+        rval = 10;
         goto func_exit;
     }
 
 func_exit:
-    return 0;
+    return rval;
 }
 
 int dc_cfg_ipgate(void *arg, int mode)
 {
     char ipgate[16];
     int i;
+    int rval = 0;
 
     if(0 == mode){
         for(i = 0; i < data_msg_cnt; i++){
@@ -1016,12 +1024,12 @@ int dc_cfg_ipgate(void *arg, int mode)
         memset(ipgate, 0, sizeof(ipgate));
         strcpy(ipgate, (char*)arg);
         EPT(stderr, "%s:can not config ipgate:%s\n", __func__, ipgate);
-        //maybe need more code
+        rval = 10;
         goto func_exit;
     }
 
 func_exit:
-    return 0;
+    return rval;
 }
 
 int dc_cfg_rtc(void* arg, int mode)
@@ -1064,7 +1072,7 @@ int dc_cfg_rtc(void* arg, int mode)
     else{
         value = *(char*)arg;
         EPT(stderr, "%s:can not config RTC\n", __func__);
-        //maybe need more code
+        rval = 10;
         goto func_exit;
     }
 
@@ -1135,7 +1143,7 @@ int dc_cfg_btyvol(void* arg, int mode)
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
         EPT(stderr, "%s:can not config BTYVOL\n", __func__);
-        //maybe need more code
+        rval = 10;
         goto func_exit;
     }
 
@@ -1210,6 +1218,7 @@ int dc_cfg_btytype(void *arg, int mode)
         strcpy(value, (char*)arg);
         EPT(stderr, "%s:can not config BTYTYPE\n", __func__);
         //maybe need more code
+        rval = 10;
         goto func_exit;
     }
 
@@ -1217,6 +1226,77 @@ func_exit:
     return rval;
 }
 
+int dc_cfg_sndrate(void *arg, int mode)
+{
+    char value[32];
+    int rval = 0;
+
+    if(mode == 0){
+        int i;
+
+        sprintf(value, "%.2lfkbps", snd_rate);
+        if(strlen(value) > 15){
+            EPT(stderr, "%s,%d:wrong para\n", __func__, __LINE__);
+            rval = 2;
+            goto func_exit;
+        }
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_SNDRATE)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, value);
+                goto func_exit;
+            }
+            else
+                continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config send rate\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_rcvrate(void *arg, int mode)
+{
+    char value[32];
+    int rval = 0;
+
+    if(mode == 0){
+        int i;
+
+        sprintf(value, "%.2lfkbps", rcv_rate);
+        if(strlen(value) > 15){
+            EPT(stderr, "%s,%d:wrong para\n", __func__, __LINE__);
+            rval = 2;
+            goto func_exit;
+        }
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_RCVRATE)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, value);
+                goto func_exit;
+            }
+            else
+                continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config rcv rate\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
 
 /*
  * function:

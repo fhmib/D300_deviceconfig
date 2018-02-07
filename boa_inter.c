@@ -40,11 +40,12 @@ int main()
     char buf[1024];
     int rval;
 
-    strcpy(buf, "HighMacVersion FPGAVersion NetLayerVersion RoutingVersion If2TcpIpVersion DeviceConfigVersion NodeName NodeId\0");
+    strcpy(buf, "HighMacVersion FPGAVersion NetLayerVersion RoutingVersion If2TcpIpVersion DeviceConfigVersion NodeName NodeId SendRate ReceiveRate\0");
     rval = read_from_dc(buf);
     if(!rval){
         EPT(stderr, "%s:read failed\n", __FILE__);
     }
+#if 0
     strcpy(buf, "{\n\t\"NodeId\": 1,\n\t\"NodeName\": \" rzxt_mech[1]\",\n\t\"HighMacVersion\": \"highmac_0124\",\n\t\"NetLayerVersion\": \"netlayer_0124\",\n\t\"RoutingVersion\": \"routingp_0124\",\n\t\"If2TcpIpVersion\": \"if2tcpip_0124\",\n\t\"DeviceConfigVersion\": \"devcfg_0124\",\n\t\"FPGAVersion\": \"FPGAVER_0124\"\n}\0");
     rval = send_to_dc(buf);
     if(rval == -1){
@@ -56,6 +57,7 @@ int main()
     else if(rval > 0){
         EPT(stderr, "%s:write incomplete success, these configurations can not write[%s]\n", __FILE__, buf);
     }
+#endif
 
     return 0;
 }
@@ -119,7 +121,7 @@ int read_from_dc(char *buf)
     }
     strcpy(buf, rcv_data.data);
     len = strlen(rcv_data.data);
-    //EPT(stderr, "%s:mtype:%ld seq:%d data:\n%s\n", __FILE__, rcv_data.mtype, rcv_data.seq, rcv_data.data);
+    EPT(stderr, "%s:mtype:%ld seq:%d data:\n%s\n", __FILE__, rcv_data.mtype, rcv_data.seq, rcv_data.data);
 
     return len;
 }

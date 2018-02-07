@@ -870,7 +870,7 @@ int dc_cfg_tx1(void *arg, int mode)
         for(i = 0; i < data_msg_cnt; i++){
             if(0 == strcmp(data_msg[i].name, DNAME_TX1)){
                     memset(data_msg[i].pvalue, 0, 4);
-                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    sprintf(data_msg[i].pvalue, "-%d", rd_data/4);
                     goto func_exit;
             }
         }
@@ -887,14 +887,14 @@ int dc_cfg_tx1(void *arg, int mode)
             goto func_exit;
         }
 
-        rd_data = atoi((char*)arg);
+        rd_data = abs(atoi((char*)arg));
         rd_data = 4 * rd_data;
         ad9361_write(0x73, rd_data);
 
         for(i = 0; i < data_msg_cnt; i++){
             if(0 == strcmp(data_msg[i].name, DNAME_TX1)){
                     memset(data_msg[i].pvalue, 0, 4);
-                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    sprintf(data_msg[i].pvalue, "-%d", rd_data/4);
                     goto func_exit;
             }
         }
@@ -917,7 +917,7 @@ int dc_cfg_tx2(void *arg, int mode)
         for(i = 0; i < data_msg_cnt; i++){
             if(0 == strcmp(data_msg[i].name, DNAME_TX2)){
                     memset(data_msg[i].pvalue, 0, 4);
-                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    sprintf(data_msg[i].pvalue, "-%d", rd_data/4);
                     goto func_exit;
             }
         }
@@ -934,14 +934,14 @@ int dc_cfg_tx2(void *arg, int mode)
             goto func_exit;
         }
 
-        rd_data = atoi((char*)arg);
+        rd_data = abs(atoi((char*)arg));
         rd_data = 4 * rd_data;
         ad9361_write(0x75, rd_data);
 
         for(i = 0; i < data_msg_cnt; i++){
             if(0 == strcmp(data_msg[i].name, DNAME_TX2)){
                     memset(data_msg[i].pvalue, 0, 4);
-                    sprintf(data_msg[i].pvalue, "%d", rd_data/4);
+                    sprintf(data_msg[i].pvalue, "-%d", rd_data/4);
                     goto func_exit;
             }
         }
@@ -1015,7 +1015,7 @@ int dc_cfg_ipgate(void *arg, int mode)
         for(i = 0; i < data_msg_cnt; i++){
             if(0 == strcmp(data_msg[i].name, DNAME_IPGATE)){
                 memset(data_msg[i].pvalue, 0, 16);
-                sprintf(data_msg[i].pvalue, "192.168.%d.1", sa);
+                sprintf(data_msg[i].pvalue, "192.168.0.%d", sa);
                 goto func_exit;
             }
         }
@@ -1055,6 +1055,8 @@ int dc_cfg_rtc(void* arg, int mode)
                 continue;
 
             sscanf(line, "%*[^0-9]%c", &value);
+            if(value == '0') value = 'N';
+            else value = 'Y';
             //EPT(stderr, "%s:value[%s]\n", __func__, value);
             for(i = 0; i < data_msg_cnt; i++){
                 if(0 == strcmp(data_msg[i].name, DNAME_RTC)){
@@ -1234,7 +1236,7 @@ int dc_cfg_sndrate(void *arg, int mode)
     if(mode == 0){
         int i;
 
-        sprintf(value, "%.2lfkbps", snd_rate);
+        sprintf(value, "%.2lf", snd_rate);
         if(strlen(value) > 15){
             EPT(stderr, "%s,%d:wrong para\n", __func__, __LINE__);
             rval = 2;
@@ -1270,7 +1272,7 @@ int dc_cfg_rcvrate(void *arg, int mode)
     if(mode == 0){
         int i;
 
-        sprintf(value, "%.2lfkbps", rcv_rate);
+        sprintf(value, "%.2lf", rcv_rate);
         if(strlen(value) > 15){
             EPT(stderr, "%s,%d:wrong para\n", __func__, __LINE__);
             rval = 2;

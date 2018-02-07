@@ -1,5 +1,5 @@
-CC = gcc
-#CC = arm-xilinx-linux-gnueabi-gcc
+#CC = gcc
+CC = arm-xilinx-linux-gnueabi-gcc
 OBJECTS = dc_common.o dc_main.o dc_recv.o dc_cfg.o dc_monitor.o
 
 all: $(OBJECTS)

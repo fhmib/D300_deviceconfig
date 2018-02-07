@@ -27,7 +27,7 @@ trans_data data_msg[] =
     {DNAME_IPADDR, 0, 1, NULL, dc_cfg_ipaddr},
     {DNAME_IPMASK, 0, 1, NULL, dc_cfg_ipmask},
     {DNAME_IPGATE, 0, 1, NULL, dc_cfg_ipgate},
-    {DNAME_RTC, 0, 0, NULL, dc_cfg_rtc},
+    {DNAME_RTC, 0, 1, NULL, dc_cfg_rtc},
     {DNAME_BTYVOL, 0, 0, NULL, dc_cfg_btyvol},
     {DNAME_BTYTYPE, 0, 1, NULL, dc_cfg_btytype},
     {DNAME_SNDRATE, 0, 1, NULL, dc_cfg_sndrate},

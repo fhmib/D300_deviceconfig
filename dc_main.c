@@ -31,7 +31,21 @@ trans_data data_msg[] =
     {DNAME_BTYVOL, 0, 0, NULL, dc_cfg_btyvol},
     {DNAME_BTYTYPE, 0, 1, NULL, dc_cfg_btytype},
     {DNAME_SNDRATE, 0, 1, NULL, dc_cfg_sndrate},
-    {DNAME_RCVRATE, 0, 1, NULL, dc_cfg_rcvrate}
+    {DNAME_RCVRATE, 0, 1, NULL, dc_cfg_rcvrate},
+
+    {DNAME_NTXIPPKT, 0, 1, NULL, dc_cfg_nowtxippkt},
+    {DNAME_NRXIPPKT, 0, 1, NULL, dc_cfg_nowrxippkt},
+    {DNAME_NTXIPERR, 0, 1, NULL, dc_cfg_nowtxiperr},
+    {DNAME_NRXIPERR, 0, 1, NULL, dc_cfg_nowrxiperr},
+    {DNAME_NTXIPBYTE, 0, 1, NULL, dc_cfg_nowtxipbyte},
+    {DNAME_NRXIPBYTE, 0, 1, NULL, dc_cfg_nowrxipbyte},
+
+    {DNAME_PTXIPPKT, 0, 1, NULL, dc_cfg_pretxippkt},
+    {DNAME_PRXIPPKT, 0, 1, NULL, dc_cfg_prerxippkt},
+    {DNAME_PTXIPERR, 0, 1, NULL, dc_cfg_pretxiperr},
+    {DNAME_PRXIPERR, 0, 1, NULL, dc_cfg_prerxiperr},
+    {DNAME_PTXIPBYTE, 0, 1, NULL, dc_cfg_pretxipbyte},
+    {DNAME_PRXIPBYTE, 0, 1, NULL, dc_cfg_prerxipbyte}
 };
 const int data_msg_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
 #define DATA_CNT        sizeof(data_msg)/sizeof(data_msg[0])
@@ -40,7 +54,14 @@ dc_cfg data_cfg[DATA_CNT];  //use for config thread
 int data_cfg_cnt;           //indecate how many configurations to be configured
 int send_seq;
 int cfg_flag;               //thread signal
+
 double rcv_rate, snd_rate;
+double pre_snd, pre_rcv;
+double now_snd, now_rcv;
+char *pre_rcv_ippkt, *pre_rcv_iperr, *pre_rcv_ipbyte;
+char *now_rcv_ippkt, *now_rcv_iperr, *now_rcv_ipbyte;
+char *pre_snd_ippkt, *pre_snd_iperr, *pre_snd_ipbyte;
+char *now_snd_ippkt, *now_snd_iperr, *now_snd_ipbyte;
 
 static pthread_t mrx_tid;
 static pthread_t net_tid;
@@ -53,7 +74,6 @@ int main(int argc, char* argv[])
 {
     int rval = 0;
     int stop;
-    char path[] = "eth0";
 
     memset(pname, 0, sizeof(pname));
     strcpy(pname, argv[0]);
@@ -84,7 +104,7 @@ int main(int argc, char* argv[])
         goto process_return;
     }
 
-    rval = pthread_create(&net_tid, NULL, dc_net_thread, path);
+    rval = pthread_create(&net_tid, NULL, dc_net_thread,NULL);
     if(rval != 0){
         EPT(stderr, "%s:can not open create net thread\n", argv[0]);
         rval = 3;
@@ -236,6 +256,32 @@ int dc_init()
     rcv_rate = 0;
     snd_rate = 0;
 
+    now_rcv_ippkt = (char*)malloc(16);
+    memset(now_rcv_ippkt, 0, 16);
+    now_rcv_iperr = (char*)malloc(16);
+    memset(now_rcv_iperr, 0, 16);
+    now_rcv_ipbyte = (char*)malloc(16);
+    memset(now_rcv_ipbyte, 0, 16);
+    now_snd_ippkt = (char*)malloc(16);
+    memset(now_snd_ippkt, 0, 16);
+    now_snd_iperr = (char*)malloc(16);
+    memset(now_snd_iperr, 0, 16);
+    now_snd_ipbyte = (char*)malloc(16);
+    memset(now_snd_ipbyte, 0, 16);
+
+    pre_rcv_ippkt = (char*)malloc(16);
+    memset(pre_rcv_ippkt, 0, 16);
+    pre_rcv_iperr = (char*)malloc(16);
+    memset(pre_rcv_iperr, 0, 16);
+    pre_rcv_ipbyte = (char*)malloc(16);
+    memset(pre_rcv_ipbyte, 0, 16);
+    pre_snd_ippkt = (char*)malloc(16);
+    memset(pre_snd_ippkt, 0, 16);
+    pre_snd_iperr = (char*)malloc(16);
+    memset(pre_snd_iperr, 0, 16);
+    pre_snd_ipbyte = (char*)malloc(16);
+    memset(pre_snd_ipbyte, 0, 16);
+
     dc_msg_malloc();
     //for test
     //write_data_for_test();
@@ -265,32 +311,32 @@ void dc_msg_malloc()
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
-        if(0 == strcmp(DNAME_NLVER, data_msg[i].name)){
+        else if(0 == strcmp(DNAME_NLVER, data_msg[i].name)){
             len = 64;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
-        if(0 == strcmp(DNAME_RTVER, data_msg[i].name)){
+        else if(0 == strcmp(DNAME_RTVER, data_msg[i].name)){
             len = 64;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
-        if(0 == strcmp(DNAME_IPVER, data_msg[i].name)){
+        else if(0 == strcmp(DNAME_IPVER, data_msg[i].name)){
             len = 64;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
-        if(0 == strcmp(DNAME_DCVER, data_msg[i].name)){
+        else if(0 == strcmp(DNAME_DCVER, data_msg[i].name)){
             len = 64;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
-        if(0 == strcmp(DNAME_FPGAVER, data_msg[i].name)){
+        else if(0 == strcmp(DNAME_FPGAVER, data_msg[i].name)){
             len = 64;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
-        if(0 == strcmp(DNAME_NDID, data_msg[i].name)){
+        else if(0 == strcmp(DNAME_NDID, data_msg[i].name)){
             len = 2;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
@@ -382,6 +428,69 @@ void dc_msg_malloc()
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }
+
+        else if(0 == strcmp(DNAME_NTXIPPKT, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_NRXIPPKT, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_NTXIPERR, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_NRXIPERR, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_NTXIPBYTE, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_NRXIPBYTE, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+
+        else if(0 == strcmp(DNAME_PTXIPPKT, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_PRXIPPKT, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_PTXIPERR, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_PRXIPERR, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_PTXIPBYTE, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_PRXIPBYTE, data_msg[i].name)){
+            len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+
         else{
             //something new that be forgeted to added in this func will use default len = 64
             len = 64;
@@ -399,6 +508,20 @@ void dc_mem_free()
 {
     int i;
     
+    free(now_rcv_ippkt);
+    free(now_rcv_iperr);
+    free(now_rcv_ipbyte);
+    free(now_snd_ippkt);
+    free(now_snd_iperr);
+    free(now_snd_ipbyte);
+
+    free(pre_rcv_ippkt);
+    free(pre_rcv_iperr);
+    free(pre_rcv_ipbyte);
+    free(pre_snd_ippkt);
+    free(pre_snd_iperr);
+    free(pre_snd_ipbyte);
+
     for(i = 0; i < data_msg_cnt; i++)
     {
         free(data_msg[i].pvalue);
@@ -445,18 +568,18 @@ thread_return:
     pthread_exit((void*)&rval);
 }
 
-void *dc_net_thread(void *p_name)
+void *dc_net_thread(void *arg)
 {
     FILE *fp = NULL;
     int rval = 0;
     int len;
     int i = 0;
+    int read_ip_t = 0;
     char *pos, *p;
-    double pre_snd, pre_rcv;
-    double now_snd, now_rcv;
 
     pthread_detach(pthread_self());
 
+    arg = NULL;
     now_rcv = 0;
     now_snd = 0;
     while(1){
@@ -464,6 +587,7 @@ void *dc_net_thread(void *p_name)
         pre_rcv = now_rcv;
         pre_snd = now_snd;
         //fprintf(stderr, "pre_rcv:%lf\t pre_snd:%lf\n", pre_rcv, pre_snd);
+        pthread_mutex_lock(&dc_share.net_mutex);
         fp = fopen(NET_PATH, "r");
         if(fp == NULL){
             fprintf(stderr, "can not open "  NET_PATH "\n");
@@ -475,9 +599,9 @@ void *dc_net_thread(void *p_name)
         memset(buf, 0, 1024);
         len = fread(buf, 1, 1024, fp);
         
-        pos = strstr(buf, (char*)p_name);
+        pos = strstr(buf, NET_DEV_NAME);
         if(pos == NULL){
-            fprintf(stderr, "%s:can not find dev:%s\n", __func__, (char*)p_name);
+            fprintf(stderr, "%s:can not find dev:" NET_DEV_NAME "\n", __func__);
             fclose(fp);
             fp = NULL;
             sleep(1);
@@ -487,24 +611,75 @@ void *dc_net_thread(void *p_name)
         i = 0;
         for(p = strtok(pos, " \n\t\r"); p; p = strtok(NULL, " \n\t\r")){
             i++;
+            switch(i){
+                case 2:
+                    if(read_ip_t == UPDATE_INTER){
+                        strcpy(pre_rcv_ipbyte, now_rcv_ipbyte);
+                        strcpy(now_rcv_ipbyte, p);
+                        //EPT(stderr, "20180209:%s\n", p);
+                    }
+                    now_rcv = atod(p);
+                    break;
+
+                case 3:
+                    if(read_ip_t == UPDATE_INTER){
+                        strcpy(pre_rcv_ippkt, now_rcv_ippkt);
+                        strcpy(now_rcv_ippkt, p);
+                    }
+                    break;
+
+                case 4:
+                    if(read_ip_t == UPDATE_INTER){
+                        strcpy(pre_rcv_iperr, now_rcv_iperr);
+                        strcpy(now_rcv_iperr, p);
+                    }
+                    break;
+
+                case 10:
+                    if(read_ip_t == UPDATE_INTER){
+                        strcpy(pre_snd_ipbyte, now_snd_ipbyte);
+                        strcpy(now_snd_ipbyte, p);
+                    }
+                    now_snd = atod(p);
+                    break;
+
+                case 11:
+                    if(read_ip_t == UPDATE_INTER){
+                        strcpy(pre_snd_ippkt, now_snd_ippkt);
+                        strcpy(now_snd_ippkt, p);
+                    }
+                    break;
+
+                case 12:
+                    if(read_ip_t == UPDATE_INTER){
+                        strcpy(pre_snd_iperr, now_snd_iperr);
+                        strcpy(now_snd_iperr, p);
+                    }
+                    break;
+
+
+            }
+            /*
             if(i == 2)
                 now_rcv = atod(p);
             if(i == 10){
                 now_snd = atod(p);
                 break;
             }
+            */
         }
 
         now_rcv = now_rcv/(1024/8);
         now_snd = now_snd/(1024/8);
         //fprintf(stderr, "now_rcv:%lf\t now_snd:%lf\n", now_rcv, now_snd);
 
-        pthread_mutex_lock(&dc_share.net_mutex);
         snd_rate = now_snd - pre_snd;
         rcv_rate = now_rcv - pre_rcv;
         pthread_mutex_unlock(&dc_share.net_mutex);
         fclose(fp);
         fp = NULL;
+        read_ip_t++;
+        if(read_ip_t > UPDATE_INTER) read_ip_t = 1;
         sleep(1);
     }
 

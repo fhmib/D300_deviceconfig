@@ -74,13 +74,18 @@ int dc_read_2boa(void* arg, int seq, int length)
         }
     }
 
+    pthread_mutex_lock(&dc_share.net_mutex);
+
     //update device_info;
     rval = write_data_msg();
     
     //EPT(stderr, "%s,%d:I'm here\n", __func__, __LINE__);
+    
+    pthread_mutex_unlock(&dc_share.net_mutex);
 
     //put data to snd_msg.data
     rval = add_data(snd_msg.data, MAX_MSG_BUF);
+
     //EPT(stderr, "\nI'm in %s,%d,sending data content:", __func__, __LINE__);
     //EPT(stderr, "\n%s\n", snd_msg.data);
     len += strlen(snd_msg.data);

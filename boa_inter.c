@@ -40,7 +40,8 @@ int main()
     char buf[1024];
     int rval;
 
-    strcpy(buf, "HighMacVersion FPGAVersion NetLayerVersion RoutingVersion If2TcpIpVersion DeviceConfigVersion NodeName NodeId SendRate ReceiveRate\0");
+    //strcpy(buf, "HighMacVersion FPGAVersion NetLayerVersion RoutingVersion If2TcpIpVersion DeviceConfigVersion NodeName NodeId SendRate ReceiveRate\0");
+    strcpy(buf, "NowRxIPByte NowTxIPByte NowRxIPErrors NowTxIPErrors NowRxIPPackets NowTxIPPackets PreRxIPByte PreTxIPByte PreRxIPErrors PreTxIPErrors PreRxIPPackets PreTxIPPackets SendRate ReceiveRate");
     rval = read_from_dc(buf);
     if(!rval){
         EPT(stderr, "%s:read failed\n", __FILE__);

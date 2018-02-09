@@ -104,6 +104,7 @@ int dc_cfg_func(int arg)
     while(1){
         if(NULL == node_list_p)
             break;
+        pthread_mutex_lock(&dc_share.net_mutex);
         for(i = 0; i < data_msg_cnt; i++){
             if(0 == strcmp(node_list_p->name, data_msg[i].name)){
                 if(data_msg[i].opera){
@@ -122,6 +123,7 @@ int dc_cfg_func(int arg)
                 }
             }
         }
+        pthread_mutex_unlock(&dc_share.net_mutex);
         node_list_p = node_list_p->next;
     }
     rval = 0;

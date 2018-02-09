@@ -7,6 +7,11 @@ extern MADR sa;
 extern double rcv_rate;
 extern double snd_rate;
 
+extern char *pre_rcv_ippkt, *pre_rcv_iperr, *pre_rcv_ipbyte;
+extern char *now_rcv_ippkt, *now_rcv_iperr, *now_rcv_ipbyte;
+extern char *pre_snd_ippkt, *pre_snd_iperr, *pre_snd_ipbyte;
+extern char *now_snd_ippkt, *now_snd_iperr, *now_snd_ipbyte;
+
 void *g_FPGA_pntr;
 
 int dc_cfg_hmver(void *arg, int mode)
@@ -1292,6 +1297,354 @@ int dc_cfg_rcvrate(void *arg, int mode)
         memset(value, 0, sizeof(value));
         strcpy(value, (char*)arg);
         EPT(stderr, "%s:can not config rcv rate\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_nowtxippkt(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_NTXIPPKT)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, now_snd_ippkt);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_NTXIPPKT "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_nowrxippkt(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_NRXIPPKT)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, now_rcv_ippkt);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_NRXIPPKT "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_nowtxiperr(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_NTXIPERR)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, now_snd_iperr);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_NTXIPERR "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_nowrxiperr(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_NRXIPERR)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, now_rcv_iperr);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_NRXIPERR "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_nowtxipbyte(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_NTXIPBYTE)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, now_snd_ipbyte);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_NTXIPBYTE "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_nowrxipbyte(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_NRXIPBYTE)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, now_rcv_ipbyte);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_NRXIPBYTE "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_pretxippkt(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_PTXIPPKT)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, pre_snd_ippkt);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_PTXIPPKT "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_prerxippkt(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_PRXIPPKT)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, pre_rcv_ippkt);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_PRXIPPKT "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_pretxiperr(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_PTXIPERR)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, pre_snd_iperr);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_PTXIPERR "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_prerxiperr(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_PRXIPERR)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, pre_rcv_iperr);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_PRXIPERR "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_pretxipbyte(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_PTXIPBYTE)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, pre_snd_ipbyte);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_PTXIPBYTE "\n", __func__);
+        rval = 10;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_cfg_prerxipbyte(void *arg, int mode)
+{
+    char value[16];
+    int rval = 0;
+
+    if(mode == 0){
+        int i = 0;
+
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_PRXIPBYTE)){
+                memset(data_msg[i].pvalue, 0, 16);
+                strcpy(data_msg[i].pvalue, pre_rcv_ipbyte);
+                goto func_exit;
+            }
+            else continue;
+        }
+    }
+    else{
+        memset(value, 0, sizeof(value));
+        strcpy(value, (char*)arg);
+        EPT(stderr, "%s:can not config " DNAME_PRXIPBYTE "\n", __func__);
         rval = 10;
         goto func_exit;
     }

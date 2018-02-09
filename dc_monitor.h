@@ -35,6 +35,20 @@ int dc_cfg_btytype(void*, int);
 int dc_cfg_sndrate(void*, int);
 int dc_cfg_rcvrate(void*, int);
 
+int dc_cfg_nowtxippkt(void*, int);
+int dc_cfg_nowrxippkt(void*, int);
+int dc_cfg_nowtxiperr(void*, int);
+int dc_cfg_nowrxiperr(void*, int);
+int dc_cfg_nowtxipbyte(void*, int);
+int dc_cfg_nowrxipbyte(void*, int);
+
+int dc_cfg_pretxippkt(void*, int);
+int dc_cfg_prerxippkt(void*, int);
+int dc_cfg_pretxiperr(void*, int);
+int dc_cfg_prerxiperr(void*, int);
+int dc_cfg_pretxipbyte(void*, int);
+int dc_cfg_prerxipbyte(void*, int);
+
 //common functions
 int mod_infile(const char*, const char*, const char*, const char*, const char*);
 int chk_num(char*);

@@ -30,6 +30,7 @@
 #define MADR                U8
 #define PATH_CREAT_KEY      "/etc/profile"          /*path name for creatint all queue, can be modified*/
 #define NET_PATH            "/proc/net/dev"
+#define NET_DEV_NAME        "eth0"
 #define PNAME_DEVCFG        "devcfg"
 #define PNAME_BOA           "boa"
 #define SN_DEVCFG           20
@@ -40,6 +41,7 @@
 #define QUEUE_MODE          (QUEUE_R |QUEUE_W |QUEUE_W>>3 |QUEUE_W>>6)
 #define MAX_NODE_CNT        32
 #define MAX_MSG_BUF         8192
+#define UPDATE_INTER        5                   //interval of update net information
 //#define SND_MSG_LEN         MAX_MSG_BUF-sizeof(long)
 
 #define DNAME_FPGAVER       "FPGAVersion"
@@ -66,6 +68,20 @@
 #define DNAME_BTYTYPE       "BatteryType"
 #define DNAME_SNDRATE       "SendRate"
 #define DNAME_RCVRATE       "ReceiveRate"
+
+#define DNAME_NTXIPPKT       "NowTxIPPackets"
+#define DNAME_NRXIPPKT       "NowRxIPPackets"
+#define DNAME_NTXIPERR       "NowTxIPErrors"
+#define DNAME_NRXIPERR       "NowRxIPErrors"
+#define DNAME_NTXIPBYTE      "NowTxIPByte"
+#define DNAME_NRXIPBYTE      "NowRxIPByte"
+
+#define DNAME_PTXIPPKT       "PreTxIPPackets"
+#define DNAME_PRXIPPKT       "PreRxIPPackets"
+#define DNAME_PTXIPERR       "PreTxIPErrors"
+#define DNAME_PRXIPERR       "PreRxIPErrors"
+#define DNAME_PTXIPBYTE      "PreTxIPByte"
+#define DNAME_PRXIPBYTE      "PreRxIPByte"
 
 typedef enum _GB_MSG_TYPE
 {

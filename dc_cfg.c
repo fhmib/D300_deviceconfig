@@ -12,6 +12,9 @@ extern int read_first;
 extern dc_tshare_t dc_share;
 extern MADR sa;
 
+//ensure uart config once
+int cfg_uart;
+
 int dc_cfg_func(int arg)
 {
     int qid, i, count;
@@ -56,6 +59,7 @@ int dc_cfg_func(int arg)
         goto func_exit;
     }
     cfg_flag = 0;
+    cfg_uart = 0;
     count = data_cfg_cnt;
     //EPT(stderr, "%s:I'm ready for compared with data_msg!\n", __func__);
     for(i = 0; i < count; i++)
@@ -137,8 +141,7 @@ int dc_cfg_func(int arg)
     snd_msg.seq = send_seq;
     len += sizeof(int);
     //EPT(stderr, "rval:%d, wrong_cnt:%d\n", rval, wrong_cnt);
-    if(wrong_cnt == 0) snd_msg.data[0] = 1;
-    else snd_msg.data[0] = wrong_cnt;
+    snd_msg.data[0] = wrong_cnt;
     len += 1;
     *(int*)(snd_msg.data+1) = wrong_cnt;
     len += sizeof(int);
@@ -148,6 +151,9 @@ int dc_cfg_func(int arg)
     for(; send_num > 0; send_num--){
         dc_msg_to_boa(&snd_msg, len);
     }
+
+    //EPT(stderr, "%s: cfg_uart = %d\n", __func__, cfg_uart);
+    ASSERT(cfg_uart == 0);
 /*
     node_list_p = node_list_h;
     while(NULL != node_list_p)
@@ -179,7 +185,7 @@ func_exit:
         snd_msg.mtype = MMSG_DC_RET;
         snd_msg.seq = send_seq;
         len += sizeof(int);
-        snd_msg.data[0] = 0;
+        snd_msg.data[0] = 111;
         len += strlen(snd_msg.data);
         for(; send_num > 0; send_num--){
             dc_msg_to_boa(&snd_msg, len);
@@ -214,7 +220,13 @@ int cmpwith_data_msg(char* name, char* value)
                 rval = 1;
                 goto func_exit;
             }
-            else goto func_exit;
+            else{
+                if((0 == strcmp(DNAME_UART1SPEED, name)) || (0 == strcmp(DNAME_UART1FLOW, name)) || (0 == strcmp(DNAME_UART1DATA, name)) || (0 == strcmp(DNAME_UART1STOP, name)) || (0 == strcmp(DNAME_UART1PARITY, name))){
+                    cfg_uart++;
+                    //EPT(stderr, "%s: cfg_uart = %d\n", __func__, cfg_uart);
+                }
+                goto func_exit;
+            }
         }
     }
 

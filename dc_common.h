@@ -30,7 +30,12 @@
 #define MADR                U8
 #define PATH_CREAT_KEY      "/etc/profile"          /*path name for creatint all queue, can be modified*/
 #define NET_PATH            "/proc/net/dev"
+#define UART1_PATH          "/dev/ttyPS1"
+#ifndef LINUX_TEST
 #define NET_DEV_NAME        "eth0"
+#else
+#define NET_DEV_NAME        "ens33"
+#endif
 #define PNAME_DEVCFG        "devcfg"
 #define PNAME_BOA           "boa"
 #define SN_DEVCFG           20
@@ -69,19 +74,26 @@
 #define DNAME_SNDRATE       "SendRate"
 #define DNAME_RCVRATE       "ReceiveRate"
 
-#define DNAME_NTXIPPKT       "NowTxIPPackets"
-#define DNAME_NRXIPPKT       "NowRxIPPackets"
-#define DNAME_NTXIPERR       "NowTxIPErrors"
-#define DNAME_NRXIPERR       "NowRxIPErrors"
-#define DNAME_NTXIPBYTE      "NowTxIPByte"
-#define DNAME_NRXIPBYTE      "NowRxIPByte"
+#define DNAME_NTXIPPKT      "NowTxIPPackets"
+#define DNAME_NRXIPPKT      "NowRxIPPackets"
+#define DNAME_NTXIPERR      "NowTxIPErrors"
+#define DNAME_NRXIPERR      "NowRxIPErrors"
+#define DNAME_NTXIPBYTE     "NowTxIPByte"
+#define DNAME_NRXIPBYTE     "NowRxIPByte"
 
-#define DNAME_PTXIPPKT       "PreTxIPPackets"
-#define DNAME_PRXIPPKT       "PreRxIPPackets"
-#define DNAME_PTXIPERR       "PreTxIPErrors"
-#define DNAME_PRXIPERR       "PreRxIPErrors"
-#define DNAME_PTXIPBYTE      "PreTxIPByte"
-#define DNAME_PRXIPBYTE      "PreRxIPByte"
+#define DNAME_PTXIPPKT      "PreTxIPPackets"
+#define DNAME_PRXIPPKT      "PreRxIPPackets"
+#define DNAME_PTXIPERR      "PreTxIPErrors"
+#define DNAME_PRXIPERR      "PreRxIPErrors"
+#define DNAME_PTXIPBYTE     "PreTxIPByte"
+#define DNAME_PRXIPBYTE     "PreRxIPByte"
+
+#define DNAME_SETUART1      "SetUART1"
+#define DNAME_UART1SPEED    "UART1Speed"
+#define DNAME_UART1FLOW     "UART1FlowCtl"
+#define DNAME_UART1DATA     "UART1DataBits"
+#define DNAME_UART1STOP     "UART1StopBits"
+#define DNAME_UART1PARITY   "UART1Parity"
 
 typedef enum _GB_MSG_TYPE
 {

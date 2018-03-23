@@ -1,6 +1,8 @@
 #ifndef _DC_MONITOR_H
 #define _DC_MONITOR_H
 
+#include <termios.h>
+
 #define CONFIG_FILE             "./init.sh"
 #define DEVINFO_FILE            "./devinfo"
 #define FPGA_FILE               "./fpgadown.sh"
@@ -49,12 +51,24 @@ int dc_cfg_prerxiperr(void*, int);
 int dc_cfg_pretxipbyte(void*, int);
 int dc_cfg_prerxipbyte(void*, int);
 
+int dc_read_Uart1Speed(void*, int);
+int dc_read_Uart1Flow(void*, int);
+int dc_read_Uart1Data(void*, int);
+int dc_read_Uart1Stop(void*, int);
+int dc_read_Uart1Parity(void*, int);
+
 //common functions
+int uart_write(const char*, const char*);
 int mod_infile(const char*, const char*, const char*, const char*, const char*);
+int read_from_file(const char*, const char*, char*, int);
 int chk_num(char*);
 int chk_str(char*);
 int chk_diff_from_dmsg(const char*, const char*);
 int update_data_msg(const char*, const char*);
+int uart_open(const char*);
+void uart_close(int);
+int uart_set(int, int, int, int, int, int);
+int uart_init(const char*);
 
 //bottom functions
 int ad9361_read_bb(int);

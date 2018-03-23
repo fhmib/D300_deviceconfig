@@ -12,6 +12,8 @@ extern char *now_rcv_ippkt, *now_rcv_iperr, *now_rcv_ipbyte;
 extern char *pre_snd_ippkt, *pre_snd_iperr, *pre_snd_ipbyte;
 extern char *now_snd_ippkt, *now_snd_iperr, *now_snd_ipbyte;
 
+extern int cfg_uart;
+
 void *g_FPGA_pntr;
 
 int dc_cfg_hmver(void *arg, int mode)
@@ -715,79 +717,20 @@ func_exit:
 int dc_cfg_nodename(void* arg, int mode)
 {
     int rval = 0;
-    FILE *fp = NULL;
-    char line[512];
     char value[68];
     int len, i;
 
     if(0 == mode){
-        char *pos;
-        //EPT(stderr, "%s:I'm in\n", __func__);
-        fp = fopen(DEVINFO_FILE, "r");
-        //EPT(stderr, "%s:I'm in\n", __func__);
-        if(fp == NULL){
-            EPT(stderr, "%s:can not open devinfo file\n", __func__);
-            rval = 1;
-            goto func_exit;
-        }
-        while(!feof(fp)){
-            memset(line, 0, sizeof(line));
-            memset(value, 0, sizeof(value));
-            if(NULL == fgets(line, sizeof(line), fp)){
-                continue;
-            }
-            pos = strstr(line, "NodeName=");
-            if(NULL == pos){
-                continue;
-            }
-
-            //jump after ' '
-            len = strlen(line);
-            for(i = 0; i < len; i++){
-                if(line[i] == ' ')
-                    continue;
-                else
-                    break;
-            }
-            if(line[i] == '#')
-                continue;
-
-            pos += strlen("NodeName=");
-            strcpy(value, pos);
-            len = strlen(value);
-            if(len >= 68 || len <= 0){
-                EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-                rval = 2;
-                fclose(fp);
-                fp = NULL;
+        rval = read_from_file(DEVINFO_FILE, DNAME_NDNAME, value, sizeof(value));
+        if(rval) goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_NDNAME)){
+                memset(data_msg[i].pvalue, 0, 64);
+                strcpy(data_msg[i].pvalue, value);
                 goto func_exit;
             }
-            while(' ' == value[0] && 2 <= len){
-                strcpy(value, value+1);
-                len--;
-            }
-            while((' ' == value[len-1] || '\n' == value[len-1]) && 2 <= len){
-                value[len-1] = 0;
-                len--;
-            }
-            if(strlen(value) > 64 || strlen(value) <= 0){
-                EPT(stderr, "%s,%d:wrong name\n", __func__, __LINE__);
-                rval = 2;
-                fclose(fp);
-                fp = NULL;
-                goto func_exit;
-            }
-            for(i = 0; i < data_msg_cnt; i++){
-                if(0 == strcmp(data_msg[i].name, DNAME_NDNAME)){
-                    memset(data_msg[i].pvalue, 0, 64);
-                    strcpy(data_msg[i].pvalue, value);
-                    fclose(fp);
-                    fp = NULL;
-                    goto func_exit;
-                }
-                else
-                    continue;
-            }
+            else
+                continue;
         }
     }
     else{
@@ -1653,6 +1596,266 @@ func_exit:
     return rval;
 }
 
+int dc_read_Uart1Speed(void* arg, int mode)
+{
+    int rval = 0;
+    char value[9];
+    int i;
+
+    memset(value, 0, sizeof(value));
+    if(0 == mode){
+        rval = read_from_file(DEVINFO_FILE, DNAME_UART1SPEED, value, sizeof(value));
+        if(rval) goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_UART1SPEED)){
+                memset(data_msg[i].pvalue, 0, 8);
+                strcpy(data_msg[i].pvalue, value);
+                goto func_exit;
+            }
+            else
+                continue;
+        }
+    }
+    else{
+        strcpy(value, (char*)arg);
+        uart_write(DNAME_UART1SPEED, value);
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_read_Uart1Flow(void* arg, int mode)
+{
+    int rval = 0;
+    char value[2];
+    int i;
+
+    memset(value, 0, sizeof(value));
+    if(0 == mode){
+        rval = read_from_file(DEVINFO_FILE, DNAME_UART1FLOW, value, sizeof(value));
+        if(rval) goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_UART1FLOW)){
+                memset(data_msg[i].pvalue, 0, 1);
+                strcpy(data_msg[i].pvalue, value);
+                goto func_exit;
+            }
+            else
+                continue;
+        }
+    }
+    else{
+        strcpy(value, (char*)arg);
+        uart_write(DNAME_UART1FLOW, value);
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_read_Uart1Data(void* arg, int mode)
+{
+    int rval = 0;
+    char value[2];
+    int i;
+
+    memset(value, 0, sizeof(value));
+    if(0 == mode){
+        rval = read_from_file(DEVINFO_FILE, DNAME_UART1DATA, value, sizeof(value));
+        if(rval) goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_UART1DATA)){
+                memset(data_msg[i].pvalue, 0, 1);
+                strcpy(data_msg[i].pvalue, value);
+                goto func_exit;
+            }
+            else
+                continue;
+        }
+    }
+    else{
+        strcpy(value, (char*)arg);
+        uart_write(DNAME_UART1DATA, value);
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_read_Uart1Stop(void* arg, int mode)
+{
+    int rval = 0;
+    char value[2];
+    int i;
+
+    memset(value, 0, sizeof(value));
+    if(0 == mode){
+        rval = read_from_file(DEVINFO_FILE, DNAME_UART1STOP, value, sizeof(value));
+        if(rval) goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_UART1STOP)){
+                memset(data_msg[i].pvalue, 0, 1);
+                strcpy(data_msg[i].pvalue, value);
+                goto func_exit;
+            }
+            else
+                continue;
+        }
+    }
+    else{
+        strcpy(value, (char*)arg);
+        uart_write(DNAME_UART1STOP, value);
+    }
+
+func_exit:
+    return rval;
+}
+
+int dc_read_Uart1Parity(void* arg, int mode)
+{
+    int rval = 0;
+    char value[2];
+    int i;
+
+    memset(value, 0, sizeof(value));
+    if(0 == mode){
+        rval = read_from_file(DEVINFO_FILE, DNAME_UART1PARITY, value, sizeof(value));
+        if(rval) goto func_exit;
+        for(i = 0; i < data_msg_cnt; i++){
+            if(0 == strcmp(data_msg[i].name, DNAME_UART1PARITY)){
+                memset(data_msg[i].pvalue, 0, 1);
+                strcpy(data_msg[i].pvalue, value);
+                goto func_exit;
+            }
+            else
+                continue;
+        }
+    }
+    else{
+        strcpy(value, (char*)arg);
+        uart_write(DNAME_UART1PARITY, value);
+    }
+
+func_exit:
+    return rval;
+}
+
+int uart_write(const char *p_name, const char *p_value)
+{
+    int rval = 0;
+    int i;
+    char new_name[64];
+
+    sprintf(new_name, "%s=", p_name);
+    if(mod_infile(DEVINFO_FILE, p_name, new_name, NULL, p_value)){
+        EPT(stderr, "%s:mod_infile failed\n", __func__);
+        rval = 1;
+        goto func_exit;
+    }
+    for(i = 0; i < data_msg_cnt; i++){
+        if(0 == strcmp(data_msg[i].name, p_name)){
+            memset(data_msg[i].pvalue, 0, 1);
+            strcpy(data_msg[i].pvalue, p_value);
+            break;
+        }
+        else
+            continue;
+    }
+    //EPT(stderr, "%s: cfg_uart = %d\n", __func__, cfg_uart);
+    if(!--cfg_uart){
+        EPT(stderr, "%s:cfg_uart is zero\n", __func__);
+        while(uart_init(UART1_PATH)){
+            EPT(stderr, "%s: config uart failed, trying again...\n", __func__);
+            sleep(1);
+        }
+    }
+
+func_exit:
+    return rval;
+}
+
+/*
+ * function:
+ *      read appointed value from the file
+ * parameters:
+ *      file_path:          file path
+ *      p_name:             point to the name that caller wanna read
+ *      value:              store result
+ *      size:               length of value
+ * return:
+ *      0:                  success
+ *      other:              failure
+ */
+int read_from_file(const char *file_path, const char *p_name, char *value, int size)
+{
+    int i = 0;
+    int len;
+    FILE *fp = NULL;
+    char *pos;
+    char line[512];
+    char value_exp[size+64];
+
+    memset(value_exp, 0, size);
+    fp = fopen(file_path, "r");
+    if(NULL == fp){
+        EPT(stderr, "%s:can not open file %s", __func__, file_path);
+        return 1;
+    }
+
+    while(!feof(fp)){
+        memset(line, 0, sizeof(line));
+
+        if(NULL == fgets(line, sizeof(line), fp)) continue;
+        pos = strstr(line, p_name);
+        if(NULL == pos) continue;
+
+        //judge if the line is commented
+        len = strlen(line);
+        for(i = 0; i < len; i++){
+            if(line[i] == ' ') continue;
+            else break;
+        }
+        if(line[i] == '#') continue;
+
+        pos += strlen(p_name);
+        if(*pos == '=') pos++;
+
+        strncpy(value_exp, pos, size+64);
+        if('\0' != value_exp[size+64-1]){
+            EPT(stderr, "%s:read value_exp failed, value_exp is enough\n", __func__);
+            fclose(fp);
+            return 2;
+        }
+
+        len = strlen(value_exp);
+        while(len > 0){
+            if(value_exp[0] == ' '){
+                strcpy(value_exp, value_exp+1);
+                len--;
+            }
+            else break;
+        }
+        for(i = len - 1; i >= 0; i--){
+            if(value_exp[i] != ' ' && value_exp[i] != '\n')
+                break;
+            value_exp[i] = '\0';
+            len--;
+        }
+        if(len < 1 || len > size){
+            EPT(stderr, "%s:value lengh out of range\n", __func__);
+            fclose(fp);
+            return 3;
+        }
+        strncpy(value, value_exp, size);
+
+        fclose(fp);
+        return 0;
+    }
+
+    return 0;
+}
+
 /*
  * function:
  *      according to some keywords, modify a string within an appointed file.
@@ -1945,6 +2148,225 @@ int update_data_msg(const char *name, const char *value)
     rval = 1;
 
 func_exit:
+    return rval;
+}
+
+/* function:
+ *      open file and return file descriptor
+ * parameters:
+ *      fd:         file descriptor
+ *      port:       path of uart file
+ * return:
+ *      0:          failure
+ *      other:      value of file descriptor
+ */
+int uart_open(const char *port_path)
+{
+    int rval = 0;
+    int fd;
+
+    fd = open(port_path, O_RDWR | O_NOCTTY | O_NDELAY);
+    if(-1 == fd){
+        EPT(stderr, "%s:open file failed\n", __func__);
+        rval = 1;
+        goto func_exit;
+    }
+
+    if(fcntl(fd, F_SETFL, 0) < 0){
+        EPT(stderr, "%s:fcntl failed\n", __func__);
+        rval = 2;
+        goto func_exit;
+    }
+
+func_exit:
+    if(rval) return 0;
+    else return fd;
+}
+
+void uart_close(int fd)
+{
+    close(fd);
+}
+
+/*
+ * functions:
+ *      set parameters to fd
+ * parameters:
+ *      fd:         file descriptor
+ *      speed:      uart speed
+ *      flow_ctrl:  whether uart has flow control
+ *      databits:   data width
+ *      stopbits:   whether uart has stop bit
+ *      parity:     type of parity
+ * return:
+ *      0:          success
+ *      other:      failure
+ */
+int uart_set(int fd, int speed, int flow_ctrl, int databits, int stopbits, int parity)
+{
+    int rval = 0;
+    int i;
+    int name_arr[] = {115200, 19200, 9600, 4800, 2400, 1200, 300};
+    int speed_arr[] = {B115200, B19200, B9600, B4800, B2400, B1200, B300};
+
+    struct termios options;
+
+    if(tcgetattr(fd, &options) != 0){
+        rval = 1;
+        EPT(stderr, "%s:tcgetattr failed\n", __func__);
+        goto func_exit;
+    }
+
+    ASSERT(sizeof(name_arr) == sizeof(speed_arr));
+    for(i = 0; i < (int)(sizeof(speed_arr)/sizeof(int)); i++)
+    {
+        if(speed == name_arr[i]){
+            cfsetispeed(&options, speed_arr[i]);
+            cfsetospeed(&options, speed_arr[i]);
+        }
+    }
+
+    options.c_cflag |= CLOCAL;
+    options.c_cflag |= CREAD;
+
+    switch(flow_ctrl)
+    {
+        case 0:
+            options.c_cflag &= ~CRTSCTS;
+            break;
+        case 1:
+            options.c_cflag |= CRTSCTS;
+            break;
+        case 2:
+            options.c_cflag |= IXON | IXOFF | IXANY;
+            break;
+    }
+
+    options.c_cflag &= ~CSIZE;
+    switch(databits)
+    {
+        case 5:
+            options.c_cflag |= CS5;
+            break;
+        case 6:
+            options.c_cflag |= CS6;
+            break;
+        case 7:
+            options.c_cflag |= CS7;
+            break;
+        case 8:
+            options.c_cflag |= CS8;
+            break;
+        default:
+            EPT(stderr, "%s:Unsupported data size\n", __func__);
+            rval = 2;
+            goto func_exit;
+    }
+
+    switch(parity)
+    {
+        case 'n':
+        case 'N':
+            options.c_cflag &= ~PARENB;
+            options.c_iflag &= ~INPCK;
+            break;
+        case 'o':
+        case 'O':
+            options.c_cflag |= (PARODD | PARENB);
+            options.c_iflag |= INPCK;
+            break;
+        case 'e':
+        case 'E':
+            options.c_cflag |= PARENB;
+            options.c_cflag &= ~PARODD;
+            options.c_iflag |=INPCK;
+            break;
+        case 's':
+        case 'S':
+            options.c_cflag &= ~PARENB;
+            options.c_cflag &= ~CSTOPB;
+            break;
+        default:
+            EPT(stderr, "%s:Unsupported parity\n", __func__);
+            rval = 3;
+            goto func_exit;
+    }
+
+    switch(stopbits)
+    {
+        case 1:
+            options.c_cflag &= ~CSTOPB;
+            break;
+        case 2:
+            options.c_cflag |= CSTOPB;
+            break;
+        default:
+            EPT(stderr, "%s:Unsupported stop bits\n", __func__);
+            rval = 4;
+            goto func_exit;
+    }
+
+    options.c_oflag &= ~OPOST;
+    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+
+    options.c_cc[VTIME] = 1;
+    options.c_cc[VMIN] = 1;
+
+    tcflush(fd, TCIFLUSH);
+
+    if(tcsetattr(fd, TCSANOW, &options) != 0){
+        EPT(stderr, "%s:com set error\n", __func__);
+        rval = 5;
+        goto func_exit;
+    }
+
+func_exit:
+    return rval;
+}
+
+int uart_init(const char *port_path)
+{
+    int fd = 0;
+    char parity;
+    int speed, data, stop, flow;
+    int rval = 0;
+    char buf[8];
+
+    fd = uart_open(port_path);
+    if(0 == fd){
+        EPT(stderr, "%s:uart open failed\n", __func__);
+        rval = 1;
+        return rval;
+    }
+
+    memset(buf, 0, sizeof(buf));
+    rval = read_from_file(DEVINFO_FILE, DNAME_UART1SPEED, buf, sizeof(buf));
+    sscanf(buf, "%d", &speed);
+
+    memset(buf, 0, sizeof(buf));
+    rval = read_from_file(DEVINFO_FILE, DNAME_UART1FLOW, buf, sizeof(buf));
+    sscanf(buf, "%d", &flow);
+
+    memset(buf, 0, sizeof(buf));
+    rval = read_from_file(DEVINFO_FILE, DNAME_UART1STOP, buf, sizeof(buf));
+    sscanf(buf, "%d", &stop);
+
+    memset(buf, 0, sizeof(buf));
+    rval = read_from_file(DEVINFO_FILE, DNAME_UART1DATA, buf, sizeof(buf));
+    sscanf(buf, "%d", &data);
+
+    memset(buf, 0, sizeof(buf));
+    rval = read_from_file(DEVINFO_FILE, DNAME_UART1PARITY, buf, sizeof(buf));
+    sscanf(buf, "%c", &parity);
+
+    if(uart_set(fd, speed, flow, data, stop, parity)){
+        rval = 2;
+        uart_close(fd);
+        return rval;
+    }
+    //EPT(stderr, "%s:speed[%d], flow[%d], data[%d], stop[%d], parity[%c]\n", __func__, speed, flow, data, stop, parity);
+
+    uart_close(fd);
     return rval;
 }
 

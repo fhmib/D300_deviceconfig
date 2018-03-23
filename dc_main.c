@@ -45,7 +45,15 @@ trans_data data_msg[] =
     {DNAME_PTXIPERR, 0, 1, NULL, dc_cfg_pretxiperr},
     {DNAME_PRXIPERR, 0, 1, NULL, dc_cfg_prerxiperr},
     {DNAME_PTXIPBYTE, 0, 1, NULL, dc_cfg_pretxipbyte},
-    {DNAME_PRXIPBYTE, 0, 1, NULL, dc_cfg_prerxipbyte}
+    {DNAME_PRXIPBYTE, 0, 1, NULL, dc_cfg_prerxipbyte},
+
+    {DNAME_SETUART1, 0, 1, NULL, NULL},
+
+    {DNAME_UART1SPEED, 0, 0, NULL, dc_read_Uart1Speed},
+    {DNAME_UART1FLOW, 0, 1, NULL, dc_read_Uart1Flow},
+    {DNAME_UART1DATA, 0, 0, NULL, dc_read_Uart1Data},
+    {DNAME_UART1STOP, 0, 1, NULL, dc_read_Uart1Stop},
+    {DNAME_UART1PARITY, 0, 1, NULL, dc_read_Uart1Parity}
 };
 const int data_msg_cnt = sizeof(data_msg)/sizeof(data_msg[0]);
 #define DATA_CNT        sizeof(data_msg)/sizeof(data_msg[0])
@@ -84,7 +92,8 @@ int main(int argc, char* argv[])
     }
     sa = atoi(argv[1]);
 
-    dc_init();
+    rval = dc_init();
+    if(rval) goto process_return;
 
     rval = dc_get_qids(argv[0]);
     if(rval != 0){
@@ -215,7 +224,7 @@ int dc_rmsg_proc(int len, void* data)
         rval = 1;
         goto func_exit;
     }
-    if(rmsg->seq < 1 ||  rmsg->seq > 1000){
+    if(rmsg->seq < 0 ||  rmsg->seq > 99){
         EPT(stderr, "%s:receive a message with wrong seq num:%d\n", __func__, rmsg->seq);
         rval = 2;
         goto func_exit;
@@ -283,6 +292,14 @@ int dc_init()
     memset(pre_snd_ipbyte, 0, 16);
 
     dc_msg_malloc();
+
+#ifndef LINUX_TEST
+    if(uart_init(UART1_PATH)){
+        rval = 1;
+        goto func_exit;
+    }
+#endif
+
     //for test
     //write_data_for_test();
 /*
@@ -295,7 +312,7 @@ int dc_init()
         goto func_exit;
     }
 */
-//func_exit:
+func_exit:
     return rval;
 }
 
@@ -487,6 +504,36 @@ void dc_msg_malloc()
         }
         else if(0 == strcmp(DNAME_PRXIPBYTE, data_msg[i].name)){
             len = 16;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_SETUART1, data_msg[i].name)){
+            len = 32;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_UART1SPEED, data_msg[i].name)){
+            len = 8;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_UART1FLOW, data_msg[i].name)){
+            len = 1;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_UART1DATA, data_msg[i].name)){
+            len = 1;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_UART1STOP, data_msg[i].name)){
+            len = 1;
+            data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
+            memset(data_msg[i].pvalue, 0, len);
+        }
+        else if(0 == strcmp(DNAME_UART1PARITY, data_msg[i].name)){
+            len = 1;
             data_msg[i].pvalue = (char*)malloc(sizeof(char)*len);
             memset(data_msg[i].pvalue, 0, len);
         }

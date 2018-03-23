@@ -1,7 +1,7 @@
-fwefkldsnj;fa
-f124rq
-#jdswfklow
-    NodeName=rzxt_mech[1]
-    fkldsaf
-dshfuewfhfdsh
-#hfjoishfowh
+UART1Speed=  19200   
+UART1FlowCtl=   0  
+UART1DataBits=8
+UART1StopBits=1
+UART1Parity=N
+
+NodeName=rzxt_mech[1]

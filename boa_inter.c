@@ -41,13 +41,15 @@ int main()
     int rval;
 
     //strcpy(buf, "HighMacVersion FPGAVersion NetLayerVersion RoutingVersion If2TcpIpVersion DeviceConfigVersion NodeName NodeId SendRate ReceiveRate\0");
-    strcpy(buf, "NowRxIPByte NowTxIPByte NowRxIPErrors NowTxIPErrors NowRxIPPackets NowTxIPPackets PreRxIPByte PreTxIPByte PreRxIPErrors PreTxIPErrors PreRxIPPackets PreTxIPPackets SendRate ReceiveRate");
+    //strcpy(buf, "NowRxIPByte NowTxIPByte NowRxIPErrors NowTxIPErrors NowRxIPPackets NowTxIPPackets PreRxIPByte PreTxIPByte PreRxIPErrors PreTxIPErrors PreRxIPPackets PreTxIPPackets SendRate ReceiveRate");
+    strcpy(buf, "UART1DataBits UART1StopBits UART1Parity NodeName UART1Speed UART1FlowCtl SendRate");
     rval = read_from_dc(buf);
     if(!rval){
         EPT(stderr, "%s:read failed\n", __FILE__);
     }
-#if 0
-    strcpy(buf, "{\n\t\"NodeId\": 1,\n\t\"NodeName\": \" rzxt_mech[1]\",\n\t\"HighMacVersion\": \"highmac_0124\",\n\t\"NetLayerVersion\": \"netlayer_0124\",\n\t\"RoutingVersion\": \"routingp_0124\",\n\t\"If2TcpIpVersion\": \"if2tcpip_0124\",\n\t\"DeviceConfigVersion\": \"devcfg_0124\",\n\t\"FPGAVersion\": \"FPGAVER_0124\"\n}\0");
+#if 1
+    //strcpy(buf, "{\n\t\"NodeId\": 1,\n\t\"NodeName\": \" rzxt_mech[1]\",\n\t\"HighMacVersion\": \"highmac_0124\",\n\t\"NetLayerVersion\": \"netlayer_0124\",\n\t\"RoutingVersion\": \"routingp_0124\",\n\t\"If2TcpIpVersion\": \"if2tcpip_0124\",\n\t\"DeviceConfigVersion\": \"devcfg_0124\",\n\t\"FPGAVersion\": \"FPGAVER_0124\"\n}\0");
+    strcpy(buf, "{\n\t\"NodeName\": \" rzxt_mech[2]\", \"UART1Speed\": \"9600\", \"UART1FlowCtl\": \"2\"\"UART1StopBits\": \"2\"\"UART1DataBits\": \"7\"\"UART1Parity\": \"o\"\n}\0");
     rval = send_to_dc(buf);
     if(rval == -1){
         EPT(stderr, "%s:write failed\n", __FILE__);
@@ -104,7 +106,7 @@ int read_from_dc(char *buf)
     }
 
     msg_data.mtype = MMSG_DC_BOAREAD;
-    msg_data.seq = rand()%100;
+    msg_data.seq = (rand()%99) + 1;
     len += sizeof(int);
     strcpy(msg_data.data, buf);
     len += strlen(msg_data.data);
@@ -178,11 +180,11 @@ int send_to_dc(char *buf)
         }
         else break;
     }
-    if(rcv_data.data[0] == 0){
+    if(rcv_data.data[0] == 111){
         EPT(stderr, "%s:write to device failed\n", __func__);
         return -1;
     }
-    else if(rcv_data.data[0] == 1){
+    else if(rcv_data.data[0] == 0){
         return 0;
     }
     else{
